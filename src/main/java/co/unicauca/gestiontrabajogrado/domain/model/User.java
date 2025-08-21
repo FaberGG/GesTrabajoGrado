@@ -1,25 +1,25 @@
-package co.unicauca.gestiontrabajogrado.model;
+package co.unicauca.gestiontrabajogrado.domain.model;
 
-public class Usuario {
+public class User {
     private Integer id;
     private String nombres;
     private String apellidos;
     private String celular; // opcional
-    private Programa programa;
-    private Rol rol;
+    private enumProgram enumProgram;
+    private enumRol enumRol;
     private String email;
     private String passwordHash;
 
-    public Usuario() {}
+    public User() {}
 
-    public Usuario(Integer id, String nombres, String apellidos, String celular,
-                   Programa programa, Rol rol, String email, String passwordHash) {
+    public User(Integer id, String nombres, String apellidos, String celular,
+                enumProgram enumProgram, enumRol enumRol, String email, String passwordHash) {
         this.id = id;
         this.nombres = nombres;
         this.apellidos = apellidos;
         this.celular = celular;
-        this.programa = programa;
-        this.rol = rol;
+        this.enumProgram = enumProgram;
+        this.enumRol = enumRol;
         this.email = email;
         this.passwordHash = passwordHash;
     }
@@ -33,10 +33,10 @@ public class Usuario {
     public void setApellidos(String apellidos) { this.apellidos = apellidos; }
     public String getCelular() { return celular; }
     public void setCelular(String celular) { this.celular = celular; }
-    public Programa getPrograma() { return programa; }
-    public void setPrograma(Programa programa) { this.programa = programa; }
-    public Rol getRol() { return rol; }
-    public void setRol(Rol rol) { this.rol = rol; }
+    public enumProgram getPrograma() { return enumProgram; }
+    public void setPrograma(enumProgram enumProgram) { this.enumProgram = enumProgram; }
+    public enumRol getRol() { return enumRol; }
+    public void setRol(enumRol enumRol) { this.enumRol = enumRol; }
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
     public String getPasswordHash() { return passwordHash; }

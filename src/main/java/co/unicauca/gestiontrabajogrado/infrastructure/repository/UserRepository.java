@@ -1,19 +1,20 @@
-package co.unicauca.gestiontrabajogrado.repository;
+package co.unicauca.gestiontrabajogrado.infrastructure.repository;
 
 import java.sql.*;
 import java.util.Optional;
-import co.unicauca.gestiontrabajogrado.model.Rol;
-import co.unicauca.gestiontrabajogrado.model.Usuario;
-import co.unicauca.gestiontrabajogrado.model.Programa;
+import co.unicauca.gestiontrabajogrado.domain.model.enumRol;
+import co.unicauca.gestiontrabajogrado.domain.model.User;
+import co.unicauca.gestiontrabajogrado.domain.model.enumProgram;
+import co.unicauca.gestiontrabajogrado.infrastructure.database.DatabaseConnection;
 
-public class UsuarioRepository implements IUsuarioRepository {
-    // Implementación de los métodos de IUsuarioRepository
-    // Aquí puedes usar SQLiteConnection para obtener conexiones a la base de datos
+public class UserRepository implements IUserRepository {
+    // Implementación de los métodos de IUserRepository
+    // Aquí puedes usar DatabaseConnection para obtener conexiones a la base de datos
     // y realizar las operaciones necesarias sobre los usuarios.
     @Override
     public boolean emailExists(String email) {
         String sql = "SELECT 1 FROM usuarios WHERE email = ?";
-        try (Connection c = SQLiteConnection.get();
+        try (Connection c = DatabaseConnection.get();
              PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setString(1, email);
             try (ResultSet rs = ps.executeQuery()) {
@@ -25,10 +26,10 @@ public class UsuarioRepository implements IUsuarioRepository {
     }
 
     @Override
-    public Usuario save(Usuario u) {
+    public User save(User u) {
         String sql = "INSERT INTO usuarios(nombres, apellidos, celular, programa, rol, email, password) " +
                 "VALUES(?,?,?,?,?,?,?)";
-        try (Connection c = SQLiteConnection.get();
+        try (Connection c = DatabaseConnection.get();
              PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, u.getNombres());
             ps.setString(2, u.getApellidos());
@@ -51,20 +52,20 @@ public class UsuarioRepository implements IUsuarioRepository {
     }
 
     @Override
-    public Optional<Usuario> findByEmail(String email) {
+    public Optional<User> findByEmail(String email) {
         String sql = "SELECT * FROM usuarios WHERE email = ?";
-        try (Connection c = SQLiteConnection.get();
+        try (Connection c = DatabaseConnection.get();
              PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setString(1, email);
             try (ResultSet rs = ps.executeQuery()) {
                 if (!rs.next()) return Optional.empty();
-                Usuario u = new Usuario(
+                User u = new User(
                         rs.getInt("id"),
                         rs.getString("nombres"),
                         rs.getString("apellidos"),
                         rs.getString("celular"),
-                        Programa.valueOf(rs.getString("programa")),
-                        Rol.valueOf(rs.getString("rol")),
+                        enumProgram.valueOf(rs.getString("programa")),
+                        enumRol.valueOf(rs.getString("rol")),
                         rs.getString("email"),
                         rs.getString("password")
                 );

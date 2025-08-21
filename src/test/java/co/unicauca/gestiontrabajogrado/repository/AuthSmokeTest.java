@@ -1,13 +1,16 @@
 package co.unicauca.gestiontrabajogrado.repository;
 
-import co.unicauca.gestiontrabajogrado.service.AutenticacionService;
-import co.unicauca.gestiontrabajogrado.service.IAutenticacionService;
+import co.unicauca.gestiontrabajogrado.infrastructure.database.DatabaseInitializer;
+import co.unicauca.gestiontrabajogrado.infrastructure.repository.IUserRepository;
+import co.unicauca.gestiontrabajogrado.infrastructure.repository.UserRepository;
+import co.unicauca.gestiontrabajogrado.domain.service.AutenticacionService;
+import co.unicauca.gestiontrabajogrado.domain.service.IAutenticacionService;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
-import co.unicauca.gestiontrabajogrado.model.Usuario;
-import co.unicauca.gestiontrabajogrado.model.Programa;
-import co.unicauca.gestiontrabajogrado.model.Rol;
+import co.unicauca.gestiontrabajogrado.domain.model.User;
+import co.unicauca.gestiontrabajogrado.domain.model.enumProgram;
+import co.unicauca.gestiontrabajogrado.domain.model.enumRol;
 import co.unicauca.gestiontrabajogrado.util.PasswordHasher;
 
 
@@ -19,29 +22,29 @@ public class AuthSmokeTest {
         // Asegura tabla
         DatabaseInitializer.ensureCreated();
 
-        IUsuarioRepository repo = new UsuarioRepository();
+        IUserRepository repo = new UserRepository();
         PasswordHasher hasher = new PasswordHasher();
         IAutenticacionService auth = new AutenticacionService(repo, hasher);
 
         // REGISTRO
-        Usuario nuevo = new Usuario();
+        User nuevo = new User();
         nuevo.setNombres("Sofia");
         nuevo.setApellidos("Moreno");
         nuevo.setCelular("3123456789");
-        nuevo.setPrograma(Programa.INGENIERIA_DE_SISTEMAS);
-        nuevo.setRol(Rol.ESTUDIANTE); // cámbialo a DOCENTE/ADMIN según el caso
-        nuevo.setEmail("sofia@unicauca.edu.co");
+        nuevo.setPrograma(enumProgram.INGENIERIA_DE_SISTEMAS);
+        nuevo.setRol(enumRol.ESTUDIANTE); // cámbialo a DOCENTE/ADMIN según el caso
+        nuevo.setEmail("sofia3@unicauca.edu.co");
 
         // Si ya existe el email, este registro lanzará IllegalArgumentException (único)
-        Usuario creado = auth.register(nuevo, "ContraSegura#123");
+        User creado = auth.register(nuevo, "ContraSegura#123");
         assertNotNull(creado.getId());
 
         // LOGIN OK
-        Usuario logueado = auth.login("sofia@unicauca.edu.co", "ContraSegura#123");
-        assertEquals(Rol.ESTUDIANTE, logueado.getRol());
+        User logueado = auth.login("sofia3@unicauca.edu.co", "ContraSegura#123");
+        assertEquals(enumRol.ESTUDIANTE, logueado.getRol());
 
         // LOGIN FAIL (contraseña mala)
         assertThrows(IllegalArgumentException.class,
-                () -> auth.login("sofia@unicauca.edu.co", "mala#123"));
+                () -> auth.login("sofia3@unicauca.edu.co", "mala#123"));
     }
 }

@@ -1,6 +1,6 @@
-package co.unicauca.gestiontrabajogrado.model;
+package co.unicauca.gestiontrabajogrado.domain.model;
 
-public enum Programa {
+public enum enumProgram {
     INGENIERIA_DE_SISTEMAS,
     INGENIERIA_ELECTRONICA_Y_TELECOMUNICACIONES,
     AUTOMATICA_INDUSTRIAL,
