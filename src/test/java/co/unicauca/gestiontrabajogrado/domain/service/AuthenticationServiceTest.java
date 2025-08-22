@@ -3,8 +3,8 @@ package co.unicauca.gestiontrabajogrado.domain.service;
 import co.unicauca.gestiontrabajogrado.infrastructure.repository.IUserRepository;
 import co.unicauca.gestiontrabajogrado.domain.model.User;
 import co.unicauca.gestiontrabajogrado.util.PasswordHasher;
-import co.unicauca.gestiontrabajogrado.util.EmailPolicy;
-import co.unicauca.gestiontrabajogrado.util.PasswordPolicy;
+import co.unicauca.gestiontrabajogrado.util.IEmailPolicy;
+import co.unicauca.gestiontrabajogrado.util.IPasswordPolicy;
 import co.unicauca.gestiontrabajogrado.domain.model.enumRol;
 import co.unicauca.gestiontrabajogrado.domain.model.enumProgram;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
@@ -32,6 +31,12 @@ class AuthenticationServiceTest {
 
     @Mock
     private PasswordHasher passwordHasher;
+
+    @Mock
+    private IEmailPolicy emailPolicy; // Mock de la interfaz IEmailPolicy
+
+    @Mock
+    private IPasswordPolicy passwordPolicy; // Mock de la interfaz IPasswordPolicy
 
     @InjectMocks
     private AutenticacionService autenticacionService;
@@ -55,81 +60,73 @@ class AuthenticationServiceTest {
     @Test
     void testRegister_Success() {
         // Arrange
-        // Mockea las clases estáticas con Mockito.mockStatic()
-        try (MockedStatic<EmailPolicy> mockedEmailPolicy = mockStatic(EmailPolicy.class);
-             MockedStatic<PasswordPolicy> mockedPasswordPolicy = mockStatic(PasswordPolicy.class)) {
+        when(emailPolicy.isInstitutional(testUser.getEmail())).thenReturn(true);
+        when(passwordPolicy.isValid(plainPassword)).thenReturn(true);
+        when(userRepository.emailExists(testUser.getEmail())).thenReturn(false);
+        when(passwordHasher.hash(plainPassword)).thenReturn(hashedPassword);
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
 
-            mockedEmailPolicy.when(() -> EmailPolicy.isInstitutional(testUser.getEmail())).thenReturn(true);
-            mockedPasswordPolicy.when(() -> PasswordPolicy.isValid(plainPassword)).thenReturn(true);
-            when(userRepository.emailExists(testUser.getEmail())).thenReturn(false);
-            when(passwordHasher.hash(plainPassword)).thenReturn(hashedPassword);
-            when(userRepository.save(any(User.class))).thenReturn(testUser);
+        // Act
+        User registeredUser = autenticacionService.register(testUser, plainPassword);
 
-            // Act
-            User registeredUser = autenticacionService.register(testUser, plainPassword);
+        // Assert
+        assertNotNull(registeredUser);
+        assertEquals(testUser.getEmail(), registeredUser.getEmail());
+        // Verifica que el password hash del usuario guardado es el correcto
+        assertEquals(hashedPassword, registeredUser.getPasswordHash());
 
-            // Assert
-            assertNotNull(registeredUser);
-            assertEquals(testUser.getEmail(), registeredUser.getEmail());
-            // Verifica que el password hash del usuario guardado es el correcto
-            assertEquals(hashedPassword, registeredUser.getPasswordHash());
-
-            // Verifica que los métodos esperados fueron llamados
-            verify(userRepository).emailExists(testUser.getEmail());
-            verify(passwordHasher).hash(plainPassword);
-            verify(userRepository).save(testUser);
-        }
+        // Verifica que los métodos esperados fueron llamados
+        verify(userRepository).emailExists(testUser.getEmail());
+        verify(passwordHasher).hash(plainPassword);
+        verify(userRepository).save(testUser);
+        verify(emailPolicy).isInstitutional(testUser.getEmail());
+        verify(passwordPolicy).isValid(plainPassword);
     }
 
     @Test
     void testRegister_InvalidEmail() {
         // Arrange
-        try (MockedStatic<EmailPolicy> mockedEmailPolicy = mockStatic(EmailPolicy.class)) {
-            mockedEmailPolicy.when(() -> EmailPolicy.isInstitutional(testUser.getEmail())).thenReturn(false);
+        when(emailPolicy.isInstitutional(testUser.getEmail())).thenReturn(false);
 
-            // Act & Assert
-            IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
-                autenticacionService.register(testUser, plainPassword);
-            });
-            assertEquals("El email debe ser institucional (@unicauca.edu.co)", thrown.getMessage());
-            verify(userRepository, never()).emailExists(anyString()); // Verifica que no se llamó al repositorio
-        }
+        // Act & Assert
+        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
+            autenticacionService.register(testUser, plainPassword);
+        });
+        assertEquals("El email debe ser institucional (@unicauca.edu.co)", thrown.getMessage());
+        verify(userRepository, never()).emailExists(anyString()); // Verifica que no se llamó al repositorio
+        verify(emailPolicy).isInstitutional(testUser.getEmail());
     }
 
     @Test
     void testRegister_InvalidPassword() {
         // Arrange
-        try (MockedStatic<EmailPolicy> mockedEmailPolicy = mockStatic(EmailPolicy.class);
-             MockedStatic<PasswordPolicy> mockedPasswordPolicy = mockStatic(PasswordPolicy.class)) {
+        when(emailPolicy.isInstitutional(testUser.getEmail())).thenReturn(true);
+        when(passwordPolicy.isValid(plainPassword)).thenReturn(false);
 
-            mockedEmailPolicy.when(() -> EmailPolicy.isInstitutional(testUser.getEmail())).thenReturn(true);
-            mockedPasswordPolicy.when(() -> PasswordPolicy.isValid(plainPassword)).thenReturn(false);
-
-            // Act & Assert
-            IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
-                autenticacionService.register(testUser, plainPassword);
-            });
-            assertEquals("La contraseña no cumple la política (min 6, 1 dígito, 1 mayúscula, 1 especial)", thrown.getMessage());
-        }
+        // Act & Assert
+        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
+            autenticacionService.register(testUser, plainPassword);
+        });
+        assertEquals("La contraseña no cumple la política (min 6, 1 dígito, 1 mayúscula, 1 especial)", thrown.getMessage());
+        verify(emailPolicy).isInstitutional(testUser.getEmail());
+        verify(passwordPolicy).isValid(plainPassword);
     }
 
     @Test
     void testRegister_EmailAlreadyExists() {
         // Arrange
-        try (MockedStatic<EmailPolicy> mockedEmailPolicy = mockStatic(EmailPolicy.class);
-             MockedStatic<PasswordPolicy> mockedPasswordPolicy = mockStatic(PasswordPolicy.class)) {
+        when(emailPolicy.isInstitutional(testUser.getEmail())).thenReturn(true);
+        when(passwordPolicy.isValid(plainPassword)).thenReturn(true);
+        when(userRepository.emailExists(testUser.getEmail())).thenReturn(true);
 
-            mockedEmailPolicy.when(() -> EmailPolicy.isInstitutional(testUser.getEmail())).thenReturn(true);
-            mockedPasswordPolicy.when(() -> PasswordPolicy.isValid(plainPassword)).thenReturn(true);
-            when(userRepository.emailExists(testUser.getEmail())).thenReturn(true);
-
-            // Act & Assert
-            IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
-                autenticacionService.register(testUser, plainPassword);
-            });
-            assertEquals("El email ya está registrado", thrown.getMessage());
-            verify(userRepository, never()).save(any(User.class)); // Verifica que el usuario no se guardó
-        }
+        // Act & Assert
+        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
+            autenticacionService.register(testUser, plainPassword);
+        });
+        assertEquals("El email ya está registrado", thrown.getMessage());
+        verify(userRepository, never()).save(any(User.class)); // Verifica que el usuario no se guardó
+        verify(emailPolicy).isInstitutional(testUser.getEmail());
+        verify(passwordPolicy).isValid(plainPassword);
     }
 
     // --- Pruebas para el método LOGIN ---

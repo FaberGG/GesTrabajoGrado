@@ -1,9 +1,19 @@
 package co.unicauca.gestiontrabajogrado.util;
 
 import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-class EmailPolicyTest{
+class EmailPolicyTest {
+
+    private EmailPolicy emailPolicy;
+
+    @BeforeEach
+    void setUp() {
+        emailPolicy = EmailPolicy.getInstance();
+    }
+
     /**
      * Prueba con un correo institucional válido.
      */
@@ -13,7 +23,7 @@ class EmailPolicyTest{
         String validEmail = "usuario@unicauca.edu.co";
 
         // Act & Assert
-        assertTrue(EmailPolicy.isInstitutional(validEmail), "El email institucional debe ser válido.");
+        assertTrue(emailPolicy.isInstitutional(validEmail), "El email institucional debe ser válido.");
     }
 
     /**
@@ -25,7 +35,7 @@ class EmailPolicyTest{
         String validEmail = "Usuario@Unicauca.edu.co";
 
         // Act & Assert
-        assertTrue(EmailPolicy.isInstitutional(validEmail), "El email con mayúsculas debe ser válido.");
+        assertTrue(emailPolicy.isInstitutional(validEmail), "El email con mayúsculas debe ser válido.");
     }
 
     /**
@@ -37,7 +47,7 @@ class EmailPolicyTest{
         String incorrectDomainEmail = "usuario@gmail.com";
 
         // Act & Assert
-        assertFalse(EmailPolicy.isInstitutional(incorrectDomainEmail), "El email con dominio incorrecto debe ser inválido.");
+        assertFalse(emailPolicy.isInstitutional(incorrectDomainEmail), "El email con dominio incorrecto debe ser inválido.");
     }
 
     /**
@@ -49,7 +59,7 @@ class EmailPolicyTest{
         String similarDomainEmail = "usuario@unicauca.com.co";
 
         // Act & Assert
-        assertFalse(EmailPolicy.isInstitutional(similarDomainEmail), "El email con un dominio similar debe ser inválido.");
+        assertFalse(emailPolicy.isInstitutional(similarDomainEmail), "El email con un dominio similar debe ser inválido.");
     }
 
     /**
@@ -61,7 +71,7 @@ class EmailPolicyTest{
         String nullEmail = null;
 
         // Act & Assert
-        assertFalse(EmailPolicy.isInstitutional(nullEmail), "Un email nulo debe ser inválido.");
+        assertFalse(emailPolicy.isInstitutional(nullEmail), "Un email nulo debe ser inválido.");
     }
 
     /**
@@ -73,7 +83,7 @@ class EmailPolicyTest{
         String emptyEmail = "";
 
         // Act & Assert
-        assertFalse(EmailPolicy.isInstitutional(emptyEmail), "Un email vacío debe ser inválido.");
+        assertFalse(emailPolicy.isInstitutional(emptyEmail), "Un email vacío debe ser inválido.");
     }
 
     /**
@@ -85,7 +95,7 @@ class EmailPolicyTest{
         String noAtSymbolEmail = "usuariounicauca.edu.co";
 
         // Act & Assert
-        assertFalse(EmailPolicy.isInstitutional(noAtSymbolEmail), "Un email sin '@' debe ser inválido.");
+        assertFalse(emailPolicy.isInstitutional(noAtSymbolEmail), "Un email sin '@' debe ser inválido.");
     }
 
     /**
@@ -97,6 +107,6 @@ class EmailPolicyTest{
         String emailWithSpaces = "  usuario@unicauca.edu.co  ";
 
         // Act & Assert
-        assertFalse(EmailPolicy.isInstitutional(emailWithSpaces), "Un email con espacios al inicio o final debe ser inválido.");
+        assertFalse(emailPolicy.isInstitutional(emailWithSpaces), "Un email con espacios al inicio o final debe ser inválido.");
     }
 }
