@@ -4,6 +4,7 @@
  */
 package co.unicauca.gestiontrabajogrado.presentation.dashboard.docenteview;
 
+import co.unicauca.gestiontrabajogrado.domain.model.User;
 import co.unicauca.gestiontrabajogrado.presentation.common.HeaderPanel;
 import co.unicauca.gestiontrabajogrado.presentation.common.ProfileCardPanel;
 import co.unicauca.gestiontrabajogrado.presentation.common.UIConstants;
@@ -20,7 +21,7 @@ public class DocenteView extends JFrame {
     /**
      * Creates new form DocenteView
      */
-    public DocenteView() {
+    public DocenteView(User user) {
         super("Gestión del Proceso de Trabajo de Grado");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setMinimumSize(new Dimension(1100, 700));
@@ -47,12 +48,12 @@ public class DocenteView extends JFrame {
 
         // Contenido principal (tarjeta perfil)
         ProfileCardPanel card = new ProfileCardPanel(
-                "Egyi Casas",
-                "Ingeniería de Sistemas",
-                "105xxxxxx",
-                "egyicasas",
-                "Docente",
-                "egyi@unicauca.edu.co"
+                user.getNombres() + " " + user.getApellidos(),
+                user.getPrograma().toString(),
+                user.getId().toString(),
+                user.getEmail(),
+                user.getRol().toString(),
+                user.getEmail()
         );
         body.add(card, BorderLayout.CENTER);
     }
@@ -103,7 +104,7 @@ public class DocenteView extends JFrame {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception ignored) { }
-        SwingUtilities.invokeLater(() -> new DocenteView().setVisible(true));
+        SwingUtilities.invokeLater(() -> new DocenteView(new User()).setVisible(true));
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

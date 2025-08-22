@@ -5,6 +5,7 @@
 package co.unicauca.gestiontrabajogrado.presentation.dashboard.estudianteview;
 
 
+import co.unicauca.gestiontrabajogrado.domain.model.User;
 import co.unicauca.gestiontrabajogrado.presentation.common.HeaderPanel;
 import co.unicauca.gestiontrabajogrado.presentation.common.ProfileCardPanel;
 import co.unicauca.gestiontrabajogrado.presentation.common.UIConstants;
@@ -22,7 +23,7 @@ public class EstudianteView extends JFrame {
      * Creates new form EstudianteView
      */
     
-    public EstudianteView() {
+    public EstudianteView(User user) {
         super("Panel del Estudiante");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setMinimumSize(new Dimension(1100, 700));
@@ -49,12 +50,12 @@ public class EstudianteView extends JFrame {
 
         // Contenido principal (tarjeta perfil del estudiante)
         ProfileCardPanel card = new ProfileCardPanel(
-                "Juan Pérez",
-                "Ingeniería de Sistemas",
-                "108xxxxxx",
-                "juanperez",
-                "Estudiante",
-                "juanperez@unicauca.edu.co"
+                user.getNombres() + " " + user.getApellidos(),
+                user.getPrograma().toString(),
+                user.getId().toString(),
+                user.getEmail(),
+                user.getRol().toString(),
+                user.getEmail()
         );
         body.add(card, BorderLayout.CENTER);
     }
@@ -115,7 +116,7 @@ public class EstudianteView extends JFrame {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception ignored) { }
-        SwingUtilities.invokeLater(() -> new EstudianteView().setVisible(true));
+        SwingUtilities.invokeLater(() -> new EstudianteView(new User()).setVisible(true));
     
     }
 
