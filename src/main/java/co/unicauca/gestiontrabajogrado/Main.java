@@ -1,6 +1,5 @@
 package co.unicauca.gestiontrabajogrado;
 
-
 import co.unicauca.gestiontrabajogrado.domain.model.User;
 import co.unicauca.gestiontrabajogrado.infrastructure.repository.UserRepository;
 import co.unicauca.gestiontrabajogrado.presentation.auth.login.LoginView;
@@ -8,12 +7,14 @@ import co.unicauca.gestiontrabajogrado.presentation.auth.login.LoginController;
 import co.unicauca.gestiontrabajogrado.domain.service.AutenticacionService;
 import co.unicauca.gestiontrabajogrado.domain.service.IAutenticacionService;
 import co.unicauca.gestiontrabajogrado.infrastructure.repository.IUserRepository;
-// Asume que tienes una implementación concreta del repositorio
-// import co.unicauca.gestiontrabajogrado.infrastructure.repository.impl.UserRepositoryImpl;
+import co.unicauca.gestiontrabajogrado.presentation.common.ServiceManager; // NUEVO: Importar ServiceManager
 import co.unicauca.gestiontrabajogrado.util.PasswordHasher;
+import co.unicauca.gestiontrabajogrado.util.EmailPolicy;
+import co.unicauca.gestiontrabajogrado.util.PasswordPolicy;
+import co.unicauca.gestiontrabajogrado.util.IEmailPolicy;
+import co.unicauca.gestiontrabajogrado.util.IPasswordPolicy;
 
 import javax.swing.*;
-import java.util.Optional;
 
 /**
  * Clase principal de la aplicación
@@ -59,24 +60,32 @@ public class Main {
      * Inicializa la aplicación configurando las dependencias
      */
     private static void initializeApplication() {
-        // 1. Configurar dependencias (Inyección de Dependencias manual)
         IUserRepository userRepository = createUserRepository();
         PasswordHasher passwordHasher = new PasswordHasher();
-        IAutenticacionService autenticacionService = new AutenticacionService(userRepository, passwordHasher);
+        IEmailPolicy emailPolicy = EmailPolicy.getInstance();
+        IPasswordPolicy passwordPolicy = PasswordPolicy.getInstance();
+        IAutenticacionService autenticacionService = new AutenticacionService(
+            userRepository, passwordHasher, emailPolicy, passwordPolicy
+        );
 
-        // 2. Crear la vista de login
+        // 2. NUEVO: Configurar ServiceManager con la instancia del servicio
+        // Esto permite que otras partes de la aplicación (como cerrar sesión) accedan al servicio
+        ServiceManager.getInstance().setAutenticacionService(autenticacionService);
+
+        // 3. Crear la vista de login
         LoginView loginView = new LoginView();
 
-        // 3. Crear el controller con las dependencias
+        // 4. Crear el controller con las dependencias
         LoginController loginController = new LoginController(autenticacionService, loginView);
 
-        // 4. Conectar la vista con el controller
+        // 5. Conectar la vista con el controller
         loginView.setController(loginController);
 
-        // 5. Mostrar la ventana de login
+        // 6. Mostrar la ventana de login
         loginView.setVisible(true);
 
         System.out.println("Aplicación iniciada correctamente");
+        System.out.println("ServiceManager configurado con AutenticacionService");
     }
 
     /**
@@ -111,5 +120,4 @@ public class Main {
 
         System.exit(1);
     }
-
 }

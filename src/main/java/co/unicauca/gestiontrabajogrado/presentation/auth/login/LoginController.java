@@ -5,6 +5,8 @@ import co.unicauca.gestiontrabajogrado.domain.service.IAutenticacionService;
 import co.unicauca.gestiontrabajogrado.domain.model.User;
 import co.unicauca.gestiontrabajogrado.presentation.dashboard.docenteview.DocenteView;
 import co.unicauca.gestiontrabajogrado.presentation.dashboard.estudianteview.EstudianteView;
+import co.unicauca.gestiontrabajogrado.presentation.auth.register.RegisterView;
+import co.unicauca.gestiontrabajogrado.presentation.auth.register.RegisterController;
 
 import javax.swing.*;
 
@@ -17,10 +19,17 @@ import javax.swing.*;
 public class LoginController {
 
     private final IAutenticacionService autenticacionService;
-    private final LoginView loginView;
+    private LoginView loginView;
 
     public LoginController(IAutenticacionService autenticacionService, LoginView loginView) {
         this.autenticacionService = autenticacionService;
+        this.loginView = loginView;
+    }
+
+    /**
+     * Permite actualizar la referencia de la vista (útil cuando se vuelve del registro)
+     */
+    public void setLoginView(LoginView loginView) {
         this.loginView = loginView;
     }
 
@@ -69,6 +78,90 @@ public class LoginController {
     }
 
     /**
+     * Maneja la navegación hacia la vista de registro
+     * Cierra la vista actual y abre la vista de registro
+     */
+    public void handleRegistrarse() {
+        SwingUtilities.invokeLater(() -> {
+            try {
+                // Cerrar la ventana de login
+                loginView.dispose();
+
+                // Crear la vista de registro
+                RegisterView registerView = new RegisterView();
+
+                // Crear el controlador de registro con una referencia a este controlador
+                RegisterController registerController = new RegisterController(
+                        autenticacionService,
+                        registerView,
+                        this  // Pasar referencia del LoginController
+                );
+
+                registerView.setController(registerController);
+                registerView.setVisible(true);
+
+            } catch (Exception e) {
+                showError("Error al abrir la ventana de registro. Por favor, intenta nuevamente.");
+                System.err.println("Error al abrir RegisterView: " + e.getMessage());
+                e.printStackTrace();
+
+                // Si hay error, mantener la ventana de login abierta
+                if (loginView != null && !loginView.isDisplayable()) {
+                    loginView = new LoginView(this);
+                    loginView.setVisible(true);
+                }
+            }
+        });
+    }
+
+    /**
+     * Maneja el retorno desde la vista de registro al login
+     * Este método será llamado desde RegisterController
+     */
+    public void handleVolverDesdeRegistro() {
+        SwingUtilities.invokeLater(() -> {
+            try {
+                // Crear nueva instancia de LoginView
+                loginView = new LoginView(this);
+                loginView.setVisible(true);
+
+            } catch (Exception e) {
+                showError("Error al volver al login. Por favor, reinicia la aplicación.");
+                System.err.println("Error al volver a LoginView: " + e.getMessage());
+                e.printStackTrace();
+            }
+        });
+    }
+
+    /**
+     * Maneja el retorno exitoso desde registro
+     * Muestra el login con un mensaje de éxito
+     */
+    public void handleRegistroExitoso(String nombreUsuario) {
+        SwingUtilities.invokeLater(() -> {
+            try {
+                // Crear nueva instancia de LoginView
+                loginView = new LoginView(this);
+                loginView.setVisible(true);
+
+                // Mostrar mensaje de bienvenida
+                SwingUtilities.invokeLater(() -> {
+                    loginView.showSuccess(
+                            "¡Registro completado exitosamente!\n" +
+                                    "Bienvenido, " + nombreUsuario + ".\n" +
+                                    "Ya puedes iniciar sesión con tu nueva cuenta."
+                    );
+                });
+
+            } catch (Exception e) {
+                showError("Error al volver al login. Por favor, reinicia la aplicación.");
+                System.err.println("Error al volver a LoginView después de registro: " + e.getMessage());
+                e.printStackTrace();
+            }
+        });
+    }
+
+    /**
      * Redirige al dashboard apropiado según el tipo de usuario
      * @param user Usuario autenticado
      */
@@ -95,7 +188,7 @@ public class LoginController {
                     default:
                         showError("Tipo de usuario no reconocido: " + user.getRol());
                         // Reabrir login si hay error
-                        new LoginView().setVisible(true);
+                        handleVolverDesdeRegistro();
                         break;
                 }
 
@@ -105,7 +198,7 @@ public class LoginController {
                 e.printStackTrace();
 
                 // Reabrir login si hay error
-                new LoginView().setVisible(true);
+                handleVolverDesdeRegistro();
             }
         });
     }
@@ -115,10 +208,6 @@ public class LoginController {
      * @param email Email a recordar
      */
     private void handleRememberMe(String email) {
-        // Aquí puedes implementar la lógica para recordar credenciales
-        // Por ejemplo, guardar en un archivo de configuración (NO la contraseña)
-        // o usar Java Preferences API
-
         try {
             java.util.prefs.Preferences prefs = java.util.prefs.Preferences.userNodeForPackage(LoginController.class);
             prefs.put("rememberedEmail", email);
@@ -158,24 +247,28 @@ public class LoginController {
     }
 
     /**
-     * Maneja la funcionalidad "Registrarse"
+     * Obtiene la instancia del servicio de autenticación
+     * Útil para pasarlo al RegisterController
      */
-    public void handleRegistrarse() {
-        JOptionPane.showMessageDialog(
-                loginView,
-                "Funcionalidad de registrar en desarrollo.\n" +
-                        "Por favor, contacta al administrador del sistema.",
-                "Registrarse",
-                JOptionPane.INFORMATION_MESSAGE
-        );
+    public IAutenticacionService getAutenticacionService() {
+        return autenticacionService;
     }
 
     // Métodos de utilidad para mostrar mensajes
     private void showError(String message) {
-        JOptionPane.showMessageDialog(loginView, message, "Error", JOptionPane.ERROR_MESSAGE);
+        if (loginView != null) {
+            JOptionPane.showMessageDialog(loginView, message, "Error", JOptionPane.ERROR_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(null, message, "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void showSuccess(String message) {
-        JOptionPane.showMessageDialog(loginView, message, "Éxito", JOptionPane.INFORMATION_MESSAGE);
+        if (loginView != null) {
+            JOptionPane.showMessageDialog(loginView, message, "Éxito", JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(null, message, "Éxito", JOptionPane.INFORMATION_MESSAGE);
+        }
     }
 }
+// No se requiere cambio, cumple SRP y DIP.

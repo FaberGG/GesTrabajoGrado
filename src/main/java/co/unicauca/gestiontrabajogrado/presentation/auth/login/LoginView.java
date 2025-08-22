@@ -381,24 +381,15 @@ public class LoginView extends JFrame {
             showError("Error interno: Controlador no inicializado.");
             return;
         }
-
-        String email = emailField.getText().trim();
-        String password = new String(passwordField.getPassword());
-        boolean rememberMe = rememberMeCheckBox.isSelected();
-
-        // Delegar la lógica al controller
-        controller.handleLogin(email, password, rememberMe);
+        // Delegar toda la lógica al controlador
+        controller.handleLogin(getEmailText(), getPasswordText(), isRememberMeSelected());
     }
 
     private void handleRegistrarse() {
         if (controller != null) {
             controller.handleRegistrarse();
         } else {
-            JOptionPane.showMessageDialog(this,
-                    "Funcionalidad de Registrars en desarrollo.\n" +
-                            "Por favor, contacta al administrador del sistema.",
-                    "Registrarse",
-                    JOptionPane.INFORMATION_MESSAGE);
+            showError("Controlador no inicializado.");
         }
     }
 

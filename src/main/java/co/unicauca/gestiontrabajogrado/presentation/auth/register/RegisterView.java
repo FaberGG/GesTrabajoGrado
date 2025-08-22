@@ -1,526 +1,639 @@
 package co.unicauca.gestiontrabajogrado.presentation.auth.register;
 
+
+import co.unicauca.gestiontrabajogrado.presentation.common.UIConstants;
+import co.unicauca.gestiontrabajogrado.presentation.common.HeaderPanel;
+import co.unicauca.gestiontrabajogrado.domain.model.enumProgram;
+import co.unicauca.gestiontrabajogrado.domain.model.enumRol;
+
 import javax.swing.*;
-import javax.swing.border.AbstractBorder;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
-public class RegisterView extends JDialog { // Cambio de JFrame a JDialog para modal
-    // Colores que coinciden con el login
-    private static final Color HEADER_COLOR = new Color(52, 103, 170);
-    private static final Color PRIMARY_COLOR = new Color(52, 103, 170);
-    private static final Color BACKGROUND_COLOR = new Color(240, 242, 247);
-    private static final Color CARD_COLOR = Color.WHITE;
-    private static final Color TEXT_COLOR = new Color(73, 80, 87);
-    private static final Color BORDER_COLOR = new Color(206, 212, 218);
-    private static final Color LINK_COLOR = new Color(52, 103, 170);
+/**
+ * Formulario de registro para el sistema de gestión de trabajo de grado
+ * @author Lyz
+ */
+public class RegisterView extends JFrame {
 
-    // Componentes
-    private JTextField txtNombres;
-    private JTextField txtApellidos;
-    private JTextField txtCelular;
-    private JComboBox<String> cbPrograma;
-    private JComboBox<String> cbRol;
-    private JTextField txtEmail;
-    private JPasswordField txtPassword;
-    private JButton btnRegistrar;
-    private JButton btnCancelar;
-    private JLabel lblLogin;
+    private JTextField nombresField;
+    private JTextField apellidosField;
+    private JTextField celularField;
+    private JComboBox<ProgramItem> programaComboBox;
+    private JComboBox<RolItem> rolComboBox;
+    private JTextField emailField;
+    private JPasswordField passwordField;
+    private JPasswordField confirmPasswordField;
+    private JButton registerButton;
+    private JLabel volverLoginLabel;
+    private RegisterController controller;
 
-    // Constructor que recibe el frame padre para hacer la ventana modal
-    public RegisterView(JFrame parent) {
-        super(parent, "Universidad del Cauca - Registro", true); // Modal
-        initializeDialog();
-        setupComponents();
+    public RegisterView() {
+        super("Registrarse - Gestión del Proceso de Trabajo de Grado");
+        initializeFrame();
+        createComponents();
         setupLayout();
+        setupEventListeners();
     }
 
-    private void initializeDialog() {
-        // Configuración específica para ventana modal - TAMAÑO AUMENTADO
-        setSize(700, 800); // Mucho más alto para mostrar todos los campos
-        setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-        setLocationRelativeTo(getParent()); // Centrar respecto al padre
-        setResizable(true);
-        setMinimumSize(new Dimension(650, 750)); // Mínimo más grande
-
-        getContentPane().setBackground(BACKGROUND_COLOR);
+    /**
+     * Constructor que recibe el controller (inyección de dependencia)
+     * @param controller Controlador para manejar la lógica de registro
+     */
+    public RegisterView(RegisterController controller) {
+        this();
+        this.controller = controller;
     }
 
-    private void setupComponents() {
-        // Configurar componentes
-        txtNombres = createStyledTextField();
-        txtApellidos = createStyledTextField();
-        txtCelular = createStyledTextField();
-        txtEmail = createStyledTextField();
-        txtPassword = createStyledPasswordField();
-
-        // ComboBoxes estilizados
-        cbPrograma = createStyledComboBox(new String[]{
-            "Seleccione un programa...",
-            "INGENIERIA_SISTEMAS",
-            "INGENIERIA_ELECTRONICA_TELECOMUNICACIONES",
-            "AUTOMATICA_INDUSTRIAL",
-            "TECNOLOGIA_TELEMATICA"
-        });
-
-        cbRol = createStyledComboBox(new String[]{
-            "Seleccione un rol...",
-            "ESTUDIANTE",
-            "DOCENTE"
-        });
-
-        // Botones
-        btnRegistrar = createPrimaryButton("Registrarse");
-        btnCancelar = createSecondaryButton("Cancelar");
-
-        // Enlace para cerrar y volver al login
-        lblLogin = createLinkLabel("¿Ya tienes cuenta? Cerrar e Iniciar Sesión");
+    /**
+     * Establece el controller después de la construcción
+     * @param controller Controlador para manejar la lógica de registro
+     */
+    public void setController(RegisterController controller) {
+        this.controller = controller;
     }
 
-    private void setupLayout() {
-        setLayout(new BorderLayout());
-
-        // Header compacto para modal
-        JPanel headerPanel = createCompactHeaderPanel();
-        add(headerPanel, BorderLayout.NORTH);
-
-        // Contenido principal con scroll mejorado
-        JPanel mainContent = createScrollableMainContent();
-        JScrollPane scrollPane = new JScrollPane(mainContent);
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        scrollPane.setBorder(null);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-        scrollPane.getViewport().setBackground(BACKGROUND_COLOR);
-
-        add(scrollPane, BorderLayout.CENTER);
-    }
-    
-    private JPanel createCompactHeaderPanel() {
-        JPanel headerPanel = new JPanel();
-        headerPanel.setBackground(HEADER_COLOR);
-        headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
-        headerPanel.setBorder(BorderFactory.createEmptyBorder(15, 30, 15, 30));
-        
-        // Título principal más compacto
-        JLabel titleLabel = new JLabel("Registro de Usuario");
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 22));
-        titleLabel.setForeground(Color.WHITE);
-        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
-        // Subtítulo
-        JLabel subtitleLabel = new JLabel("Sistema de Gestión de Trabajo de Grado");
-        subtitleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        subtitleLabel.setForeground(Color.WHITE);
-        subtitleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
-        headerPanel.add(titleLabel);
-        headerPanel.add(Box.createVerticalStrut(5));
-        headerPanel.add(subtitleLabel);
-        
-        return headerPanel;
-    }
-    
-    private JPanel createScrollableMainContent() {
-        JPanel mainPanel = new JPanel();
-        mainPanel.setBackground(BACKGROUND_COLOR);
-        mainPanel.setLayout(new BorderLayout());
-        
-        // Panel contenedor con padding
-        JPanel containerPanel = new JPanel();
-        containerPanel.setBackground(BACKGROUND_COLOR);
-        containerPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 20, 10)); // Menos padding vertical
-        
-        // Crear el formulario
-        JPanel formCard = createFormCard();
-        containerPanel.add(formCard);
-        
-        mainPanel.add(containerPanel, BorderLayout.CENTER);
-        
-        // Panel inferior con espacio adicional para scroll
-        JPanel bottomPadding = new JPanel();
-        bottomPadding.setBackground(BACKGROUND_COLOR);
-        bottomPadding.setPreferredSize(new Dimension(0, 50)); // Más espacio para scroll
-        mainPanel.add(bottomPadding, BorderLayout.SOUTH);
-        
-        return mainPanel;
-    }
-    
-    private JPanel createFormCard() {
-        JPanel card = new JPanel();
-        card.setBackground(CARD_COLOR);
-        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
-        card.setBorder(BorderFactory.createCompoundBorder(
-            new RoundedBorder(15),
-            BorderFactory.createEmptyBorder(30, 40, 30, 40)
-        ));
-        
-        // Tamaño ajustado para mostrar todos los campos
-        card.setPreferredSize(new Dimension(550, 750)); // Más alto
-        card.setMaximumSize(new Dimension(550, Integer.MAX_VALUE));
-        
-        // Título del formulario
-        JLabel formTitle = new JLabel("Crear Nueva Cuenta");
-        formTitle.setFont(new Font("Segoe UI", Font.BOLD, 20));
-        formTitle.setForeground(TEXT_COLOR);
-        formTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
-        JLabel formSubtitle = new JLabel("Complete todos los campos obligatorios (*)");
-        formSubtitle.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        formSubtitle.setForeground(new Color(108, 117, 125));
-        formSubtitle.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
-        card.add(formTitle);
-        card.add(Box.createVerticalStrut(8));
-        card.add(formSubtitle);
-        card.add(Box.createVerticalStrut(20)); // Reducido un poco
-        
-        // Campos del formulario - ESPACIADO REDUCIDO
-        card.add(createFieldLabel("Nombres *"));
-        card.add(Box.createVerticalStrut(5));
-        card.add(txtNombres);
-        card.add(Box.createVerticalStrut(12)); // Reducido de 15 a 12
-        
-        card.add(createFieldLabel("Apellidos *"));
-        card.add(Box.createVerticalStrut(5));
-        card.add(txtApellidos);
-        card.add(Box.createVerticalStrut(12));
-        
-        card.add(createFieldLabel("Celular (opcional)"));
-        card.add(Box.createVerticalStrut(5));
-        card.add(txtCelular);
-        card.add(Box.createVerticalStrut(12));
-        
-        card.add(createFieldLabel("Programa Académico *"));
-        card.add(Box.createVerticalStrut(5));
-        card.add(cbPrograma);
-        card.add(Box.createVerticalStrut(12));
-        
-        card.add(createFieldLabel("Rol *"));
-        card.add(Box.createVerticalStrut(5));
-        card.add(cbRol);
-        card.add(Box.createVerticalStrut(12));
-        
-        card.add(createFieldLabel("Correo electrónico *"));
-        card.add(Box.createVerticalStrut(5));
-        card.add(txtEmail);
-        card.add(Box.createVerticalStrut(12));
-        
-        card.add(createFieldLabel("Contraseña *"));
-        card.add(Box.createVerticalStrut(5));
-        card.add(txtPassword);
-        card.add(Box.createVerticalStrut(20)); // Espacio antes de botones
-        
-        // Panel de botones
-        JPanel buttonPanel = createButtonPanel();
-        card.add(buttonPanel);
-        card.add(Box.createVerticalStrut(15)); // Reducido
-        
-        // Enlace al login
-        card.add(lblLogin);
-        
-        return card;
+    private void initializeFrame() {
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setMinimumSize(new Dimension(1100, 900));
+        setLocationRelativeTo(null);
+        setResizable(false);
     }
 
-    private JPanel createButtonPanel() {
-        JPanel buttonPanel = new JPanel(new GridLayout(1, 2, 15, 0));
-        buttonPanel.setBackground(CARD_COLOR);
-        buttonPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
-        
-        buttonPanel.add(btnCancelar);
-        buttonPanel.add(btnRegistrar);
-        
-        return buttonPanel;
+    private void createComponents() {
+        // Campo de nombres
+        nombresField = createStyledTextField();
+
+        // Campo de apellidos
+        apellidosField = createStyledTextField();
+
+        // Campo de celular (opcional)
+        celularField = createStyledTextField();
+
+        // ComboBox para programa
+        programaComboBox = createProgramComboBox();
+
+        // ComboBox para rol
+        rolComboBox = createRolComboBox();
+
+        // Campo de email institucional
+        emailField = createStyledTextField();
+
+        // Campo de contraseña
+        passwordField = createStyledPasswordField();
+
+        // Campo de confirmar contraseña
+        confirmPasswordField = createStyledPasswordField();
+
+        // Botón de registro con sombra y ancho consistente
+        registerButton = new JButton("Registrarse") {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                // Sombra del botón
+                g2.setColor(new Color(0, 0, 0, 15));
+                g2.fillRoundRect(1, 2, getWidth() - 1, getHeight() - 1, 8, 8);
+
+                // Fondo del botón
+                g2.setColor(getBackground());
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
+                super.paintComponent(g);
+                g2.dispose();
+            }
+        };
+        registerButton.setFont(new Font("SansSerif", Font.BOLD, 16));
+        registerButton.setBackground(UIConstants.BLUE_MAIN);
+        registerButton.setForeground(Color.WHITE);
+        registerButton.setBorder(BorderFactory.createEmptyBorder(12, 30, 12, 30));
+        registerButton.setFocusPainted(false);
+        registerButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        registerButton.setContentAreaFilled(false);
+        registerButton.setOpaque(true);
+        registerButton.setPreferredSize(new Dimension(640, 45));
+        registerButton.setMaximumSize(new Dimension(640, 45));
+
+        // Enlace "Volver al Login"
+        volverLoginLabel = new JLabel("<html><u>¿Ya tienes cuenta? Iniciar Sesión</u></html>");
+        volverLoginLabel.setFont(UIConstants.SMALL);
+        volverLoginLabel.setForeground(UIConstants.BLUE_MAIN);
+        volverLoginLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
     }
-    
-    private JLabel createFieldLabel(String text) {
-        JLabel label = new JLabel(text);
-        label.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        label.setForeground(TEXT_COLOR);
-        label.setAlignmentX(Component.LEFT_ALIGNMENT);
-        return label;
-    }
-    
+
     private JTextField createStyledTextField() {
         JTextField field = new JTextField();
-        field.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        field.setBorder(new RoundedBorder(8));
-        field.setBackground(CARD_COLOR);
-        field.setForeground(TEXT_COLOR);
-        field.setPreferredSize(new Dimension(0, 40));
-        field.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
-        
-        // Efecto de foco
-        field.addFocusListener(new FocusAdapter() {
-            @Override
-            public void focusGained(FocusEvent e) {
-                field.setBorder(new RoundedBorder(8, PRIMARY_COLOR, 2));
-            }
-            
-            @Override
-            public void focusLost(FocusEvent e) {
-                field.setBorder(new RoundedBorder(8));
-            }
-        });
-        
+        field.setFont(UIConstants.BODY);
+        field.setBackground(UIConstants.CARD_BG);
+        field.setForeground(UIConstants.TEXT_PRIMARY);
+        field.setBorder(createRoundedBorder(new Color(0xCED4DA), false));
+        field.setPreferredSize(new Dimension(310, 40));
+        field.setMaximumSize(new Dimension(310, 40));
         return field;
     }
-    
+
     private JPasswordField createStyledPasswordField() {
         JPasswordField field = new JPasswordField();
-        field.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        field.setBorder(new RoundedBorder(8));
-        field.setBackground(CARD_COLOR);
-        field.setForeground(TEXT_COLOR);
-        field.setPreferredSize(new Dimension(0, 40));
-        field.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
-        
-        // Efecto de foco
-        field.addFocusListener(new FocusAdapter() {
-            @Override
-            public void focusGained(FocusEvent e) {
-                field.setBorder(new RoundedBorder(8, PRIMARY_COLOR, 2));
-            }
-            
-            @Override
-            public void focusLost(FocusEvent e) {
-                field.setBorder(new RoundedBorder(8));
-            }
-        });
-        
+        field.setFont(UIConstants.BODY);
+        field.setBackground(UIConstants.CARD_BG);
+        field.setForeground(UIConstants.TEXT_PRIMARY);
+        field.setBorder(createRoundedBorder(new Color(0xCED4DA), false));
+        field.setPreferredSize(new Dimension(310, 40));
+        field.setMaximumSize(new Dimension(310, 40));
         return field;
     }
-    
-    private JComboBox<String> createStyledComboBox(String[] items) {
-        JComboBox<String> comboBox = new JComboBox<>(items);
-        comboBox.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        comboBox.setBackground(CARD_COLOR);
-        comboBox.setForeground(TEXT_COLOR);
-        comboBox.setBorder(new RoundedBorder(8));
-        comboBox.setPreferredSize(new Dimension(0, 40));
-        comboBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
-        
-        // Personalizar el renderer
+
+    private JComboBox<ProgramItem> createProgramComboBox() {
+        ProgramItem[] programItems = {
+                new ProgramItem(null, "Selecciona un programa"),
+                new ProgramItem(enumProgram.INGENIERIA_DE_SISTEMAS, "Ingeniería de Sistemas"),
+                new ProgramItem(enumProgram.INGENIERIA_ELECTRONICA_Y_TELECOMUNICACIONES, "Ingeniería Electrónica y Telecomunicaciones"),
+                new ProgramItem(enumProgram.AUTOMATICA_INDUSTRIAL, "Automática Industrial"),
+                new ProgramItem(enumProgram.TECNOLOGIA_EN_TELEMATICA, "Tecnología en Telemática")
+        };
+
+        JComboBox<ProgramItem> comboBox = new JComboBox<>(programItems);
+        comboBox.setFont(UIConstants.BODY);
+        comboBox.setBackground(UIConstants.CARD_BG);
+        comboBox.setForeground(UIConstants.TEXT_PRIMARY);
+        comboBox.setBorder(createRoundedBorder(new Color(0xCED4DA), false));
+        comboBox.setPreferredSize(new Dimension(310, 40));
+        comboBox.setMaximumSize(new Dimension(310, 40));
         comboBox.setRenderer(new DefaultListCellRenderer() {
             @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value, 
-                    int index, boolean isSelected, boolean cellHasFocus) {
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+                                                          boolean isSelected, boolean cellHasFocus) {
                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                
-                if (index == 0) {
-                    setForeground(new Color(108, 117, 125));
-                } else {
-                    setForeground(TEXT_COLOR);
+                if (value instanceof ProgramItem) {
+                    setText(((ProgramItem) value).getDisplayName());
                 }
-                
-                if (isSelected) {
-                    setBackground(PRIMARY_COLOR);
-                    setForeground(Color.WHITE);
-                }
-                
-                setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
-                
                 return this;
             }
         });
-        
         return comboBox;
     }
-    
-    private JButton createPrimaryButton(String text) {
-        JButton button = new JButton(text);
-        button.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        button.setForeground(Color.WHITE);
-        button.setBackground(PRIMARY_COLOR);
-        button.setBorder(new RoundedBorder(8));
-        button.setPreferredSize(new Dimension(0, 45));
-        button.setFocusPainted(false);
-        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        
-        // Efectos hover
-        button.addMouseListener(new java.awt.event.MouseAdapter() {
+
+    private JComboBox<RolItem> createRolComboBox() {
+        RolItem[] rolItems = {
+                new RolItem(null, "Selecciona un rol"),
+                new RolItem(enumRol.ESTUDIANTE, "Estudiante"),
+                new RolItem(enumRol.DOCENTE, "Docente")
+        };
+
+        JComboBox<RolItem> comboBox = new JComboBox<>(rolItems);
+        comboBox.setFont(UIConstants.BODY);
+        comboBox.setBackground(UIConstants.CARD_BG);
+        comboBox.setForeground(UIConstants.TEXT_PRIMARY);
+        comboBox.setBorder(createRoundedBorder(new Color(0xCED4DA), false));
+        comboBox.setPreferredSize(new Dimension(310, 40));
+        comboBox.setMaximumSize(new Dimension(310, 40));
+        comboBox.setRenderer(new DefaultListCellRenderer() {
             @Override
-            public void mouseEntered(java.awt.event.MouseEvent e) {
-                button.setBackground(PRIMARY_COLOR.darker());
-            }
-            
-            @Override
-            public void mouseExited(java.awt.event.MouseEvent e) {
-                button.setBackground(PRIMARY_COLOR);
-            }
-        });
-        
-        return button;
-    }
-    
-    private JButton createSecondaryButton(String text) {
-        JButton button = new JButton(text);
-        button.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        button.setForeground(TEXT_COLOR);
-        button.setBackground(Color.WHITE);
-        button.setBorder(new RoundedBorder(8, BORDER_COLOR, 1));
-        button.setPreferredSize(new Dimension(0, 45));
-        button.setFocusPainted(false);
-        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        
-        // Efectos hover
-        button.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseEntered(java.awt.event.MouseEvent e) {
-                button.setBackground(new Color(248, 249, 250));
-                button.setBorder(new RoundedBorder(8, PRIMARY_COLOR, 1));
-            }
-            
-            @Override
-            public void mouseExited(java.awt.event.MouseEvent e) {
-                button.setBackground(Color.WHITE);
-                button.setBorder(new RoundedBorder(8, BORDER_COLOR, 1));
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+                                                          boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof RolItem) {
+                    setText(((RolItem) value).getDisplayName());
+                }
+                return this;
             }
         });
-        
-        return button;
+        return comboBox;
     }
-    
-    private JLabel createLinkLabel(String text) {
-        JLabel link = new JLabel("<html><u>" + text + "</u></html>");
-        link.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        link.setForeground(LINK_COLOR);
-        link.setAlignmentX(Component.CENTER_ALIGNMENT);
-        link.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        
-        // Efecto hover
-        link.addMouseListener(new java.awt.event.MouseAdapter() {
+
+    // Método para crear bordes redondeados con sombra interna sutil
+    private javax.swing.border.Border createRoundedBorder(Color borderColor, boolean focused) {
+        return new javax.swing.border.AbstractBorder() {
             @Override
-            public void mouseEntered(java.awt.event.MouseEvent e) {
-                link.setForeground(LINK_COLOR.darker());
+            public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                // Sombra interna muy sutil
+                if (!focused) {
+                    g2.setColor(new Color(0, 0, 0, 3));
+                    g2.drawRoundRect(x + 1, y + 1, width - 3, height - 3, 7, 7);
+                }
+
+                // Borde principal
+                g2.setColor(focused ? UIConstants.BLUE_MAIN : borderColor);
+                g2.setStroke(new BasicStroke(focused ? 2.0f : 1.0f));
+                g2.drawRoundRect(x, y, width - 1, height - 1, 8, 8);
+                g2.dispose();
             }
-            
+
             @Override
-            public void mouseExited(java.awt.event.MouseEvent e) {
-                link.setForeground(LINK_COLOR);
+            public Insets getBorderInsets(Component c) {
+                return new Insets(10, 15, 10, 15);
+            }
+        };
+    }
+
+    private void setupLayout() {
+        // Root panel
+        JPanel root = new JPanel(new BorderLayout());
+        root.setBackground(UIConstants.BG_APP);
+        setContentPane(root);
+
+        // Header
+        HeaderPanel header = new HeaderPanel();
+        root.add(header, BorderLayout.NORTH);
+
+        // Main content panel con scroll
+        JPanel mainPanel = new JPanel(new GridBagLayout());
+        mainPanel.setBackground(UIConstants.BG_APP);
+        mainPanel.setBorder(new EmptyBorder(30, 50, 30, 50));
+
+        // Register card panel
+        JPanel registerCard = createRegisterCard();
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.CENTER;
+        mainPanel.add(registerCard, gbc);
+
+        // Scroll pane para el contenido
+        JScrollPane scrollPane = new JScrollPane(mainPanel);
+        scrollPane.setBorder(null);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+
+        root.add(scrollPane, BorderLayout.CENTER);
+    }
+
+    private JPanel createRegisterCard() {
+        JPanel card = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                // Sombra sutil para el card
+                g2.setColor(new Color(0, 0, 0, 8));
+                g2.fillRoundRect(2, 2, getWidth() - 2, getHeight() - 2, 12, 12);
+
+                // Fondo del card
+                g2.setColor(getBackground());
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 12, 12);
+                g2.dispose();
+            }
+        };
+
+        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+        card.setBackground(UIConstants.CARD_BG);
+        card.setBorder(BorderFactory.createEmptyBorder(45, 50, 45, 50));
+        card.setPreferredSize(new Dimension(800, 600));
+        card.setOpaque(false);
+
+        // Título
+        JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+        titlePanel.setBackground(UIConstants.CARD_BG);
+        titlePanel.setOpaque(false);
+        titlePanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel titleLabel = new JLabel("Crear Cuenta");
+        titleLabel.setFont(UIConstants.H1);
+        titleLabel.setForeground(UIConstants.TEXT_PRIMARY);
+        titlePanel.add(titleLabel);
+
+        card.add(titlePanel);
+        card.add(Box.createRigidArea(new Dimension(0, 5)));
+
+        // Subtítulo
+        JPanel subtitlePanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+        subtitlePanel.setBackground(UIConstants.CARD_BG);
+        subtitlePanel.setOpaque(false);
+        subtitlePanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel subtitleLabel = new JLabel("Completa la información para registrarte");
+        subtitleLabel.setFont(UIConstants.BODY);
+        subtitleLabel.setForeground(UIConstants.TEXT_MUTED);
+        subtitlePanel.add(subtitleLabel);
+
+        card.add(subtitlePanel);
+        card.add(Box.createRigidArea(new Dimension(0, 25)));
+
+        // Panel principal para las dos columnas
+        JPanel formPanel = new JPanel(new GridLayout(1, 2, 20, 0));
+        formPanel.setBackground(UIConstants.CARD_BG);
+        formPanel.setOpaque(false);
+        formPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // Columna izquierda
+        JPanel leftColumn = new JPanel();
+        leftColumn.setLayout(new BoxLayout(leftColumn, BoxLayout.Y_AXIS));
+        leftColumn.setBackground(UIConstants.CARD_BG);
+        leftColumn.setOpaque(false);
+
+        addFormFieldToColumn(leftColumn, "Nombres *", nombresField);
+        addFormFieldToColumn(leftColumn, "Apellidos *", apellidosField);
+        addFormFieldToColumn(leftColumn, "Número de Celular", celularField);
+        addFormFieldToColumn(leftColumn, "Programa Académico *", programaComboBox);
+
+        // Columna derecha
+        JPanel rightColumn = new JPanel();
+        rightColumn.setLayout(new BoxLayout(rightColumn, BoxLayout.Y_AXIS));
+        rightColumn.setBackground(UIConstants.CARD_BG);
+        rightColumn.setOpaque(false);
+
+        addFormFieldToColumn(rightColumn, "Rol *", rolComboBox);
+        addFormFieldToColumn(rightColumn, "Email Institucional *", emailField);
+        addFormFieldToColumn(rightColumn, "Contraseña *", passwordField);
+        addFormFieldToColumn(rightColumn, "Confirmar Contraseña *", confirmPasswordField);
+
+        // Agregar columnas al panel del formulario
+        formPanel.add(leftColumn);
+        formPanel.add(rightColumn);
+
+        card.add(formPanel);
+        card.add(Box.createRigidArea(new Dimension(0, 30)));
+
+        // Panel para el botón centrado
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+        buttonPanel.setBackground(UIConstants.CARD_BG);
+        buttonPanel.setOpaque(false);
+        buttonPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        buttonPanel.add(registerButton);
+
+        card.add(buttonPanel);
+        card.add(Box.createRigidArea(new Dimension(0, 15)));
+
+        // Panel para el enlace centrado
+        JPanel linkPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+        linkPanel.setBackground(UIConstants.CARD_BG);
+        linkPanel.setOpaque(false);
+        linkPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        linkPanel.add(volverLoginLabel);
+
+        card.add(linkPanel);
+
+        return card;
+    }
+
+    /**
+     * Método para agregar campos del formulario a una columna específica
+     */
+    private void addFormFieldToColumn(JPanel column, String labelText, Component field) {
+        // Panel contenedor para el campo
+        JPanel fieldContainer = new JPanel();
+        fieldContainer.setLayout(new BoxLayout(fieldContainer, BoxLayout.Y_AXIS));
+        fieldContainer.setBackground(UIConstants.CARD_BG);
+        fieldContainer.setOpaque(false);
+        fieldContainer.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // Label
+        JLabel label = new JLabel(labelText);
+        label.setFont(new Font("SansSerif", Font.BOLD, 13));
+        label.setForeground(UIConstants.TEXT_PRIMARY);
+        label.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        // Panel para el label con alineación correcta
+        JPanel labelPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        labelPanel.setBackground(UIConstants.CARD_BG);
+        labelPanel.setOpaque(false);
+        labelPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        labelPanel.setMaximumSize(new Dimension(310, 25));
+        labelPanel.setPreferredSize(new Dimension(310, 25));
+        labelPanel.add(label);
+
+        // Ajustar el tamaño de los campos para las columnas
+        field.setPreferredSize(new Dimension(310, 40));
+        field.setMaximumSize(new Dimension(310, 40));
+
+        // Panel para el campo centrado
+        JPanel fieldPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+        fieldPanel.setBackground(UIConstants.CARD_BG);
+        fieldPanel.setOpaque(false);
+        fieldPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        fieldPanel.add(field);
+
+        // Agregar al contenedor
+        fieldContainer.add(labelPanel);
+        fieldContainer.add(Box.createRigidArea(new Dimension(0, 5)));
+        fieldContainer.add(fieldPanel);
+
+        // Agregar al panel de la columna
+        column.add(fieldContainer);
+        column.add(Box.createRigidArea(new Dimension(0, 18)));
+    }
+
+    private void setupEventListeners() {
+        // Acción del botón de registro
+        registerButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                handleRegister();
             }
         });
-        
-        return link;
-    }
-    
-    // Clase para bordes redondeados
-    private static class RoundedBorder extends AbstractBorder {
-        private final int radius;
-        private final Color color;
-        private final int thickness;
-        
-        public RoundedBorder(int radius) {
-            this(radius, BORDER_COLOR, 1);
-        }
-        
-        public RoundedBorder(int radius, Color color, int thickness) {
-            this.radius = radius;
-            this.color = color;
-            this.thickness = thickness;
-        }
-        
-        @Override
-        public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setColor(color);
-            g2.setStroke(new BasicStroke(thickness));
-            g2.drawRoundRect(x, y, width - 1, height - 1, radius, radius);
-            g2.dispose();
-        }
-        
-        @Override
-        public Insets getBorderInsets(Component c) {
-            int padding = Math.max(4, radius / 4);
-            return new Insets(padding + 8, padding + 12, padding + 8, padding + 12);
-        }
-    }
-    
-    // Getters para obtener los valores de los campos
-    public String getNombres() { 
-        return txtNombres.getText().trim();
-    }
-    
-    public String getApellidos() { 
-        return txtApellidos.getText().trim();
-    }
-    
-    public String getCelular() { 
-        return txtCelular.getText().trim();
-    }
-    
-    public String getPrograma() { 
-        int selectedIndex = cbPrograma.getSelectedIndex();
-        return selectedIndex > 0 ? cbPrograma.getSelectedItem().toString() : "";
-    }
-    
-    public String getRol() { 
-        int selectedIndex = cbRol.getSelectedIndex();
-        return selectedIndex > 0 ? cbRol.getSelectedItem().toString() : "";
-    }
-    
-    public String getEmail() { 
-        return txtEmail.getText().trim();
-    }
-    
-    public String getPassword() { 
-        return new String(txtPassword.getPassword());
-    }
-    
-    // Listeners
-    public void addRegisterListener(ActionListener listener) {
-        btnRegistrar.addActionListener(listener);
-    }
-    
-    public void addCancelListener(ActionListener listener) {
-        btnCancelar.addActionListener(listener);
-    }
-    
-    public void addLoginLinkListener(ActionListener listener) {
-        lblLogin.addMouseListener(new java.awt.event.MouseAdapter() {
+
+        // Hover effect para el botón
+        registerButton.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseClicked(java.awt.event.MouseEvent e) {
-                if (listener != null) {
-                    listener.actionPerformed(null);
+            public void mouseEntered(MouseEvent e) {
+                registerButton.setBackground(UIConstants.BLUE_DARK);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                registerButton.setBackground(UIConstants.BLUE_MAIN);
+            }
+        });
+
+        // Focus listeners para los campos de texto
+        setupFieldFocusListeners(nombresField);
+        setupFieldFocusListeners(apellidosField);
+        setupFieldFocusListeners(celularField);
+        setupFieldFocusListeners(emailField);
+        setupFieldFocusListeners(passwordField);
+        setupFieldFocusListeners(confirmPasswordField);
+
+        // Click en "Volver al Login"
+        volverLoginLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                handleVolverLogin();
+            }
+        });
+    }
+
+    private void setupFieldFocusListeners(JComponent field) {
+        field.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                field.setBorder(createRoundedBorder(UIConstants.BLUE_MAIN, true));
+            }
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                field.setBorder(createRoundedBorder(new Color(0xCED4DA), false));
+            }
+        });
+
+        field.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                if (!field.hasFocus()) {
+                    field.setBorder(createRoundedBorder(new Color(0xADB5BD), false));
+                }
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                if (!field.hasFocus()) {
+                    field.setBorder(createRoundedBorder(new Color(0xCED4DA), false));
                 }
             }
         });
     }
-    
-    // Métodos para mostrar mensajes
-    public void showMessage(String message) {
-        JOptionPane.showMessageDialog(this, message, "Universidad del Cauca", JOptionPane.INFORMATION_MESSAGE);
+
+    private void handleRegister() {
+        if (controller == null) {
+            showError("Error interno: Controlador no inicializado.");
+            return;
+        }
+        // Delegar toda la lógica al controlador
+        controller.handleRegister(
+            getNombres(),
+            getApellidos(),
+            getCelular(),
+            getSelectedProgram(),
+            getSelectedRol(),
+            getEmail(),
+            getPassword(),
+            getConfirmPassword()
+        );
     }
-    
-    public void showErrorMessage(String message) {
+
+    private void handleVolverLogin() {
+        if (controller != null) {
+            controller.handleVolverLogin();
+        } else {
+            // Confirmación antes de cerrar si no hay controller
+            int option = JOptionPane.showConfirmDialog(
+                    this,
+                    "¿Estás seguro de que quieres salir?\n" +
+                            "Se perderá la información ingresada.",
+                    "Confirmar",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE
+            );
+
+            if (option == JOptionPane.YES_OPTION) {
+                dispose();
+                SwingUtilities.invokeLater(() -> {
+                    try {
+                        Class<?> loginViewClass = Class.forName("co.unicauca.gestiontrabajogrado.presentation.auth.login.LoginView");
+                        JFrame loginView = (JFrame) loginViewClass.getDeclaredConstructor().newInstance();
+                        loginView.setVisible(true);
+                    } catch (Exception e) {
+                        System.err.println("Error al abrir LoginView: " + e.getMessage());
+                        System.exit(0); // Salir de la aplicación si no puede volver al login
+                    }
+                });
+            }
+        }
+    }
+
+    // Métodos públicos para que el controller pueda mostrar mensajes
+    public void showError(String message) {
         JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
     }
-    
-    public void showSuccessMessage(String message) {
-        JOptionPane.showMessageDialog(this, message, "Registro Exitoso", JOptionPane.INFORMATION_MESSAGE);
+
+    public void showSuccess(String message) {
+        JOptionPane.showMessageDialog(this, message, "Éxito", JOptionPane.INFORMATION_MESSAGE);
     }
-    
-    // Método para limpiar el formulario
-    public void clearForm() {
-        txtNombres.setText("");
-        txtApellidos.setText("");
-        txtCelular.setText("");
-        txtEmail.setText("");
-        txtPassword.setText("");
-        cbPrograma.setSelectedIndex(0);
-        cbRol.setSelectedIndex(0);
+
+    // Getters para que el controller pueda acceder a los datos
+    public String getNombres() {
+        return nombresField.getText().trim();
     }
-    
-    // Método para enfocar el primer campo
-    public void focusFirstField() {
-        SwingUtilities.invokeLater(() -> txtNombres.requestFocusInWindow());
+
+    public String getApellidos() {
+        return apellidosField.getText().trim();
     }
-    
-    // Método para cerrar la ventana modal
-    public void closeDialog() {
-        dispose();
+
+    public String getCelular() {
+        return celularField.getText().trim();
+    }
+
+    public enumProgram getSelectedProgram() {
+        ProgramItem selected = (ProgramItem) programaComboBox.getSelectedItem();
+        return selected != null ? selected.getEnumValue() : null;
+    }
+
+    public enumRol getSelectedRol() {
+        RolItem selected = (RolItem) rolComboBox.getSelectedItem();
+        return selected != null ? selected.getEnumValue() : null;
+    }
+
+    public String getEmail() {
+        return emailField.getText().trim();
+    }
+
+    public String getPassword() {
+        return new String(passwordField.getPassword());
+    }
+
+    public String getConfirmPassword() {
+        return new String(confirmPasswordField.getPassword());
+    }
+
+    // Clases internas para los items de los ComboBox
+    private static class ProgramItem {
+        private final enumProgram enumValue;
+        private final String displayName;
+
+        public ProgramItem(enumProgram enumValue, String displayName) {
+            this.enumValue = enumValue;
+            this.displayName = displayName;
+        }
+
+        public enumProgram getEnumValue() {
+            return enumValue;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
+
+        @Override
+        public String toString() {
+            return displayName;
+        }
+    }
+
+    private static class RolItem {
+        private final enumRol enumValue;
+        private final String displayName;
+
+        public RolItem(enumRol enumValue, String displayName) {
+            this.enumValue = enumValue;
+            this.displayName = displayName;
+        }
+
+        public enumRol getEnumValue() {
+            return enumValue;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
+
+        @Override
+        public String toString() {
+            return displayName;
+        }
+    }
+
+    public static void main(String[] args) {
+        // Look and feel del sistema para que se vea moderno
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception ignored) { }
+
+        SwingUtilities.invokeLater(() -> new RegisterView().setVisible(true));
     }
 }

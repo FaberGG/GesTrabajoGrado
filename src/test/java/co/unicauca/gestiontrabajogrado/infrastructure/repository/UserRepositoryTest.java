@@ -142,7 +142,7 @@ class UserRepositoryTest {
     // --- Métodos de ayuda para las pruebas ---
 
     private void insertUser(User user) throws SQLException {
-        String sql = "INSERT INTO usuarios(nombres, apellidos, celular, programa, rol, email, password) VALUES(?,?,?,?,?,?,?)";
+        String sql = "INSERT INTO usuarios(nombres, apellidos, celular, enumProgram, enumRol, email, password) VALUES(?,?,?,?,?,?,?)";
         try (Connection c = DatabaseConnection.get();
              PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setString(1, user.getNombres());

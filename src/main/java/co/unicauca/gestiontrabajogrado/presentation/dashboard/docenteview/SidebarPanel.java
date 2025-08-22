@@ -1,139 +1,72 @@
 package co.unicauca.gestiontrabajogrado.presentation.dashboard.docenteview;
 
-import co.unicauca.gestiontrabajogrado.presentation.common.UIConstants;
+import co.unicauca.gestiontrabajogrado.presentation.common.BaseSidebarPanel;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
-import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
+/**
+ * Panel lateral específico para el rol de Docente
+ */
+class SidebarPanel extends BaseSidebarPanel {
 
-class SidebarPanel extends JPanel {
-
-    private static final Dimension BTN_SIZE = new Dimension(220, 48);
-    private final JPanel submenu; // contenedor de submenú
-
-    SidebarPanel() {
-        setOpaque(false);
-        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        setBorder(new EmptyBorder(16, 16, 16, 12));
-        setPreferredSize(new Dimension(240, 0));
-
-        // 1) Menú de usuario (#A7C6EA)
-        add(pillButton("Menú de usuario", new Color(0xA7C6EA), Color.BLACK));
-        add(Box.createVerticalStrut(12));
-
-        // 2) Docente (#73AAEB) con flecha y submenú
-        JPanel docenteHeader = headerWithArrow("Docente", new Color(0x73AAEB), Color.WHITE);
-        add(docenteHeader);
-        add(Box.createVerticalStrut(8));
-
-        submenu = new JPanel();
-        submenu.setOpaque(false);
-        submenu.setLayout(new BoxLayout(submenu, BoxLayout.Y_AXIS));
-        submenu.add(subItemButton("Evaluar monografía"));
-        submenu.add(Box.createVerticalStrut(6));
-        submenu.add(subItemButton("Evaluar anteproyecto"));
-        submenu.setVisible(false);
-        add(submenu);
-
-        add(Box.createVerticalStrut(12));
-
-        // 3) Cerrar sesión (#2665C4)
-        add(pillButton("Cerrar Sesión", new Color(0x2665C4), Color.BLACK));
-        add(Box.createVerticalGlue());
-
-        // Acción: desplegar submenú al hacer clic en Docente
-        docenteHeader.addMouseListener(new MouseAdapter() {
-            @Override public void mouseClicked(MouseEvent e) {
-                toggleSubmenu();
-            }
-        });
+    SidebarPanel(JFrame parentFrame) {
+        super(parentFrame);
     }
 
-    private void toggleSubmenu() {
-        submenu.setVisible(!submenu.isVisible());
-        submenu.revalidate();
-        submenu.getParent().revalidate();
-        submenu.repaint();
+    @Override
+    protected String getRoleHeaderText() {
+        return "Docente";
     }
 
-    /** Botón principal tipo pastilla */
-    private JComponent pillButton(String text, Color bg, Color fg) {
-        JButton b = new JButton(text);
-        b.setAlignmentX(Component.LEFT_ALIGNMENT);
-        b.setFont(UIConstants.BODY);
-        b.setForeground(fg);
-        b.setBackground(bg);
-        b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        b.setFocusPainted(false);
-        b.setOpaque(true);
-        b.setBorder(new LineBorder(bg.darker(), 1, true));
-        b.setPreferredSize(BTN_SIZE);
-        b.setMaximumSize(BTN_SIZE);
-        b.setMinimumSize(BTN_SIZE);
-        return b;
+    @Override
+    protected String[] getSubmenuItems() {
+        return new String[]{
+                "Evaluar monografía",
+                "Evaluar anteproyecto"
+        };
     }
 
-    /** Cabecera con flecha ▾ */
-    private JPanel headerWithArrow(String text, Color bg, Color fg) {
-        JPanel p = new JPanel(new BorderLayout());
-        p.setAlignmentX(Component.LEFT_ALIGNMENT);
-        p.setBackground(bg);
-        p.setOpaque(true);
-        p.setBorder(new LineBorder(bg.darker(), 1, true));
-        p.setPreferredSize(BTN_SIZE);
-        p.setMaximumSize(BTN_SIZE);
-        p.setMinimumSize(BTN_SIZE);
-        p.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-
-        JLabel l = new JLabel(text);
-        l.setFont(UIConstants.BODY);
-        l.setForeground(fg);
-
-        JLabel arrow = new JLabel("▾");
-        arrow.setFont(UIConstants.BODY);
-        arrow.setForeground(fg);
-
-        JPanel center = new JPanel(new FlowLayout(FlowLayout.LEFT, 16, 12));
-        center.setOpaque(false);
-        center.add(l);
-        p.add(center, BorderLayout.CENTER);
-
-        JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 16, 12));
-        right.setOpaque(false);
-        right.add(arrow);
-        p.add(right, BorderLayout.EAST);
-
-        return p;
+    @Override
+    protected void createRoleSpecificComponents() {
+        // Aquí se pueden agregar componentes específicos del docente si es necesario
+        // Por ahora no hay componentes adicionales
     }
 
-    /** Botones del submenú */
-    private JComponent subItemButton(String text) {
-        JButton b = new JButton(text);
-        b.setAlignmentX(Component.LEFT_ALIGNMENT);
-        b.setFont(UIConstants.BODY);
-        b.setForeground(UIConstants.TEXT_PRIMARY);
-        b.setBackground(Color.WHITE);
-        b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        b.setFocusPainted(false);
-        b.setOpaque(true);
-        b.setBorder(BorderFactory.createCompoundBorder(
-                new LineBorder(new Color(0xD0D8E8), 1, true),
-                new EmptyBorder(10, 14, 10, 14)
-        ));
-        Dimension d = new Dimension(BTN_SIZE.width, 40);
-        b.setPreferredSize(d);
-        b.setMaximumSize(d);
-        b.setMinimumSize(d);
+    @Override
+    protected void setupSubmenuToggle() {
+        // La lógica de toggle está en la clase base, aquí se puede personalizar si es necesario
+        // Por ahora usamos el comportamiento por defecto
+    }
 
-        // Acción demo (puedes cambiar por navegación real)
-        b.addActionListener(e ->
-                JOptionPane.showMessageDialog(this, "Acción: " + text, "Info",
-                        JOptionPane.INFORMATION_MESSAGE)
-        );
-        return b;
+    @Override
+    protected void handleSubmenuAction(String actionText) {
+        // Manejar acciones específicas del docente
+        switch (actionText) {
+            case "Evaluar monografía":
+                handleEvaluarMonografia();
+                break;
+            case "Evaluar anteproyecto":
+                handleEvaluarAnteproyecto();
+                break;
+            default:
+                JOptionPane.showMessageDialog(this, "Acción: " + actionText, "Info",
+                        JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
+    private void handleEvaluarMonografia() {
+        // TODO: Implementar navegación a la vista de evaluación de monografía
+        JOptionPane.showMessageDialog(this,
+                "Funcionalidad de evaluación de monografía en desarrollo.",
+                "Evaluar Monografía",
+                JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void handleEvaluarAnteproyecto() {
+        // TODO: Implementar navegación a la vista de evaluación de anteproyecto
+        JOptionPane.showMessageDialog(this,
+                "Funcionalidad de evaluación de anteproyecto en desarrollo.",
+                "Evaluar Anteproyecto",
+                JOptionPane.INFORMATION_MESSAGE);
     }
 }

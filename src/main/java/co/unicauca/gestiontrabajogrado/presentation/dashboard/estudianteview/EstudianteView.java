@@ -22,7 +22,7 @@ public class EstudianteView extends JFrame {
     /**
      * Creates new form EstudianteView
      */
-    
+
     public EstudianteView(User user) {
         super("Panel del Estudiante");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -44,8 +44,8 @@ public class EstudianteView extends JFrame {
         body.setBackground(UIConstants.BG_APP);
         root.add(body, BorderLayout.CENTER);
 
-        // Lateral izquierdo (menú)
-        SidebarPanel sidebar = new SidebarPanel();
+        // Lateral izquierdo (menú) - CAMBIO: pasar referencia a this
+        SidebarPanel sidebar = new SidebarPanel(this);
         body.add(sidebar, BorderLayout.WEST);
 
         // Contenido principal (tarjeta perfil del estudiante)
@@ -74,12 +74,12 @@ public class EstudianteView extends JFrame {
         GroupLayout layout = new GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
-            layout.createParallelGroup(GroupLayout.Alignment.LEADING)
-            .addGap(0, 400, Short.MAX_VALUE)
+                layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                        .addGap(0, 400, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
-            layout.createParallelGroup(GroupLayout.Alignment.LEADING)
-            .addGap(0, 300, Short.MAX_VALUE)
+                layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                        .addGap(0, 300, Short.MAX_VALUE)
         );
 
         pack();
@@ -92,7 +92,7 @@ public class EstudianteView extends JFrame {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
          */
         try {
             for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
@@ -117,9 +117,10 @@ public class EstudianteView extends JFrame {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception ignored) { }
         SwingUtilities.invokeLater(() -> new EstudianteView(new User()).setVisible(true));
-    
+
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     // End of variables declaration//GEN-END:variables
 }
+// No se requiere cambio, cumple SRP.

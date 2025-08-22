@@ -27,7 +27,7 @@ public class UserRepository implements IUserRepository {
 
     @Override
     public User save(User u) {
-        String sql = "INSERT INTO usuarios(nombres, apellidos, celular, programa, rol, email, password) " +
+        String sql = "INSERT INTO usuarios(nombres, apellidos, celular, enumProgram, enumRol, email, password) " +
                 "VALUES(?,?,?,?,?,?,?)";
         try (Connection c = DatabaseConnection.get();
              PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -64,8 +64,8 @@ public class UserRepository implements IUserRepository {
                         rs.getString("nombres"),
                         rs.getString("apellidos"),
                         rs.getString("celular"),
-                        enumProgram.valueOf(rs.getString("programa")),
-                        enumRol.valueOf(rs.getString("rol")),
+                        enumProgram.valueOf(rs.getString("enumProgram")),
+                        enumRol.valueOf(rs.getString("enumRol")),
                         rs.getString("email"),
                         rs.getString("password")
                 );
