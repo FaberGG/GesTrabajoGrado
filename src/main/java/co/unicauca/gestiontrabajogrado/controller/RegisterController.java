@@ -1,11 +1,11 @@
-package co.unicauca.gestiontrabajogrado.presentation.auth.register;
+package co.unicauca.gestiontrabajogrado.controller;
 
 import co.unicauca.gestiontrabajogrado.domain.service.IAutenticacionService;
 import co.unicauca.gestiontrabajogrado.domain.model.User;
 import co.unicauca.gestiontrabajogrado.domain.model.enumProgram;
 import co.unicauca.gestiontrabajogrado.domain.model.enumRol;
-import co.unicauca.gestiontrabajogrado.presentation.auth.login.LoginView;
-import co.unicauca.gestiontrabajogrado.presentation.auth.login.LoginController;
+import co.unicauca.gestiontrabajogrado.presentation.auth.LoginView;
+import co.unicauca.gestiontrabajogrado.presentation.auth.RegisterView;
 
 import javax.swing.*;
 import java.util.regex.Pattern;

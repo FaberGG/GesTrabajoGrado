@@ -1,6 +1,7 @@
-package co.unicauca.gestiontrabajogrado.presentation.auth.register;
+package co.unicauca.gestiontrabajogrado.presentation.auth;
 
 
+import co.unicauca.gestiontrabajogrado.controller.RegisterController;
 import co.unicauca.gestiontrabajogrado.presentation.common.UIConstants;
 import co.unicauca.gestiontrabajogrado.presentation.common.HeaderPanel;
 import co.unicauca.gestiontrabajogrado.domain.model.enumProgram;
@@ -525,7 +526,7 @@ public class RegisterView extends JFrame {
                 dispose();
                 SwingUtilities.invokeLater(() -> {
                     try {
-                        Class<?> loginViewClass = Class.forName("co.unicauca.gestiontrabajogrado.presentation.auth.login.LoginView");
+                        Class<?> loginViewClass = Class.forName("co.unicauca.gestiontrabajogrado.presentation.auth.LoginView");
                         JFrame loginView = (JFrame) loginViewClass.getDeclaredConstructor().newInstance();
                         loginView.setVisible(true);
                     } catch (Exception e) {

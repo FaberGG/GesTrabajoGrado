@@ -1,12 +1,12 @@
-package co.unicauca.gestiontrabajogrado.presentation.auth.login;
+package co.unicauca.gestiontrabajogrado.controller;
 
 
 import co.unicauca.gestiontrabajogrado.domain.service.IAutenticacionService;
 import co.unicauca.gestiontrabajogrado.domain.model.User;
+import co.unicauca.gestiontrabajogrado.presentation.auth.LoginView;
 import co.unicauca.gestiontrabajogrado.presentation.dashboard.docenteview.DocenteView;
 import co.unicauca.gestiontrabajogrado.presentation.dashboard.estudianteview.EstudianteView;
-import co.unicauca.gestiontrabajogrado.presentation.auth.register.RegisterView;
-import co.unicauca.gestiontrabajogrado.presentation.auth.register.RegisterController;
+import co.unicauca.gestiontrabajogrado.presentation.auth.RegisterView;
 
 import javax.swing.*;
 

@@ -1,5 +1,6 @@
-package co.unicauca.gestiontrabajogrado.presentation.auth.login;
+package co.unicauca.gestiontrabajogrado.presentation.auth;
 
+import co.unicauca.gestiontrabajogrado.controller.LoginController;
 import co.unicauca.gestiontrabajogrado.presentation.common.UIConstants;
 import co.unicauca.gestiontrabajogrado.presentation.common.HeaderPanel;
 

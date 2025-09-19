@@ -1,8 +1,8 @@
 package co.unicauca.gestiontrabajogrado.presentation.common;
 
 import co.unicauca.gestiontrabajogrado.domain.service.IAutenticacionService;
-import co.unicauca.gestiontrabajogrado.presentation.auth.login.LoginController;
-import co.unicauca.gestiontrabajogrado.presentation.auth.login.LoginView;
+import co.unicauca.gestiontrabajogrado.controller.LoginController;
+import co.unicauca.gestiontrabajogrado.presentation.auth.LoginView;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;

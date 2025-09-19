@@ -1,9 +1,8 @@
 package co.unicauca.gestiontrabajogrado;
 
-import co.unicauca.gestiontrabajogrado.domain.model.User;
 import co.unicauca.gestiontrabajogrado.infrastructure.repository.UserRepository;
-import co.unicauca.gestiontrabajogrado.presentation.auth.login.LoginView;
-import co.unicauca.gestiontrabajogrado.presentation.auth.login.LoginController;
+import co.unicauca.gestiontrabajogrado.presentation.auth.LoginView;
+import co.unicauca.gestiontrabajogrado.controller.LoginController;
 import co.unicauca.gestiontrabajogrado.domain.service.AutenticacionService;
 import co.unicauca.gestiontrabajogrado.domain.service.IAutenticacionService;
 import co.unicauca.gestiontrabajogrado.infrastructure.repository.IUserRepository;
