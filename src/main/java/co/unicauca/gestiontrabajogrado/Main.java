@@ -12,6 +12,7 @@ import co.unicauca.gestiontrabajogrado.util.EmailPolicy;
 import co.unicauca.gestiontrabajogrado.util.PasswordPolicy;
 import co.unicauca.gestiontrabajogrado.util.IEmailPolicy;
 import co.unicauca.gestiontrabajogrado.util.IPasswordPolicy;
+import co.unicauca.gestiontrabajogrado.infrastructure.database.DatabaseInitializer;
 
 import javax.swing.*;
 
@@ -59,6 +60,9 @@ public class Main {
      * Inicializa la aplicación configurando las dependencias
      */
     private static void initializeApplication() {
+        // 1. Inicializar la base de datos
+        DatabaseInitializer.ensureCreated();
+        // 2. Crear las dependencias necesarias
         IUserRepository userRepository = createUserRepository();
         PasswordHasher passwordHasher = new PasswordHasher();
         IEmailPolicy emailPolicy = EmailPolicy.getInstance();

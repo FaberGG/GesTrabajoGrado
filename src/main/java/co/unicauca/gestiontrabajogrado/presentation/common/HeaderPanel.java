@@ -93,13 +93,11 @@ public class HeaderPanel extends JPanel {
         };
 
         for (String path : possiblePaths) {
-            System.out.println("Intentando cargar: " + path);
             try {
                 var logoStream = getClass().getResourceAsStream(path);
                 if (logoStream != null) {
                     logoImage = ImageIO.read(logoStream);
                     logoStream.close();
-                    System.out.println("✓ Logo PNG cargado exitosamente desde: " + path);
                     return;
                 } else {
                     System.out.println("✗ No encontrado en: " + path);
@@ -268,10 +266,6 @@ public class HeaderPanel extends JPanel {
             g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
             g2.drawImage(logoImage, logoX, logoY, logoWidth, logoHeight, null);
 
-            // Debug info (opcional - puedes comentar estas líneas)
-            System.out.println("Logo original: " + originalWidth + "x" + originalHeight);
-            System.out.println("Logo redimensionado: " + logoWidth + "x" + logoHeight);
-            System.out.println("Relación de aspecto mantenida: " + String.format("%.2f", aspectRatio));
         }
 
         g2.dispose();

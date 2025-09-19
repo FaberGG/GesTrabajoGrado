@@ -21,8 +21,8 @@ class SidebarPanel extends BaseSidebarPanel {
     @Override
     protected String[] getSubmenuItems() {
         return new String[]{
-                "Evaluar monografía",
-                "Evaluar anteproyecto"
+                "Nueva Propuesta",
+                "Mis Propuestas",
         };
     }
 
@@ -42,31 +42,29 @@ class SidebarPanel extends BaseSidebarPanel {
     protected void handleSubmenuAction(String actionText) {
         // Manejar acciones específicas del docente
         switch (actionText) {
-            case "Evaluar monografía":
-                handleEvaluarMonografia();
+            case "Nueva Propuesta":
+                handleNewProposal();
                 break;
-            case "Evaluar anteproyecto":
-                handleEvaluarAnteproyecto();
+            case "Mis Propuestas":
+                handleMyProposals();
                 break;
             default:
                 JOptionPane.showMessageDialog(this, "Acción: " + actionText, "Info",
                         JOptionPane.INFORMATION_MESSAGE);
         }
     }
-
-    private void handleEvaluarMonografia() {
-        // TODO: Implementar navegación a la vista de evaluación de monografía
+    private void handleNewProposal() {
+        // Lógica para manejar la creación de una nueva propuesta
         JOptionPane.showMessageDialog(this,
-                "Funcionalidad de evaluación de monografía en desarrollo.",
-                "Evaluar Monografía",
+                "Funcionalidad de nueva propuesta en desarrollo.",
+                "Nueva Propuesta",
                 JOptionPane.INFORMATION_MESSAGE);
     }
-
-    private void handleEvaluarAnteproyecto() {
-        // TODO: Implementar navegación a la vista de evaluación de anteproyecto
+    private void handleMyProposals() {
+        // Lógica para manejar la visualización de las propuestas del docente
         JOptionPane.showMessageDialog(this,
-                "Funcionalidad de evaluación de anteproyecto en desarrollo.",
-                "Evaluar Anteproyecto",
+                "Funcionalidad de mis propuestas en desarrollo.",
+                "Mis Propuestas",
                 JOptionPane.INFORMATION_MESSAGE);
     }
 }
