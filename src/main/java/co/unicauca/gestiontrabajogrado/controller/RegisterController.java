@@ -6,6 +6,8 @@ import co.unicauca.gestiontrabajogrado.domain.model.enumProgram;
 import co.unicauca.gestiontrabajogrado.domain.model.enumRol;
 import co.unicauca.gestiontrabajogrado.presentation.auth.LoginView;
 import co.unicauca.gestiontrabajogrado.presentation.auth.RegisterView;
+import co.unicauca.gestiontrabajogrado.util.EmailPolicy;
+import co.unicauca.gestiontrabajogrado.util.PasswordPolicy;
 
 import javax.swing.*;
 import java.util.regex.Pattern;
@@ -22,10 +24,6 @@ public class RegisterController {
     private final RegisterView registerView;
     private final LoginController loginController; // Referencia al controlador de login
 
-    // Patrón para validar email institucional (ejemplo)
-    private static final Pattern EMAIL_PATTERN = Pattern.compile(
-            "^[a-zA-Z0-9._%+-]+@unicauca\\.edu\\.co$"
-    );
 
     // Patrón para validar número de celular (opcional, formato colombiano)
     private static final Pattern PHONE_PATTERN = Pattern.compile(
@@ -132,7 +130,8 @@ public class RegisterController {
      * Valida el formato del email institucional
      */
     private void validateEmail(String email) {
-        if (!EMAIL_PATTERN.matcher(email).matches()) {
+        EmailPolicy emailPolicy = EmailPolicy.getInstance();
+        if (emailPolicy.isInstitutional(email)) {
             throw new IllegalArgumentException("Debe usar un email institucional válido (@unicauca.edu.co).");
         }
     }
@@ -141,25 +140,10 @@ public class RegisterController {
      * Valida la contraseña y su confirmación
      */
     private void validatePassword(String password, String confirmPassword) {
-        if (password.length() < 6) {
-            throw new IllegalArgumentException("La contraseña debe tener al menos 6 caracteres.");
-        }
-
-        if (!password.equals(confirmPassword)) {
-            throw new IllegalArgumentException("Las contraseñas no coinciden.");
-        }
-
-        // Validaciones adicionales de seguridad (opcional)
-        if (!password.matches(".*[A-Z].*")) {
-            throw new IllegalArgumentException("La contraseña debe contener al menos una letra mayúscula.");
-        }
-
-        if (!password.matches(".*[a-z].*")) {
-            throw new IllegalArgumentException("La contraseña debe contener al menos una letra minúscula.");
-        }
-
-        if (!password.matches(".*[0-9].*")) {
-            throw new IllegalArgumentException("La contraseña debe contener al menos un número.");
+        PasswordPolicy passwordPolicy = PasswordPolicy.getInstance();
+        if (!passwordPolicy.isValid(password)) {
+            throw new IllegalArgumentException("La contraseña debe tener al menos 6 caracteres, " +
+                    "al menos una mayúscula, un número y un caracter especial.");
         }
     }
 
