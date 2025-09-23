@@ -13,7 +13,8 @@ public class ProyectoGradoResponseDTO {
     public Integer codirectorId;
     public String objetivoGeneral;
     public String objetivosEspecificos;
-    public Integer estudianteId;
+    public Integer estudiante1Id;
+    public  Integer estudiante2Id;
     public enumEstadoProyecto estado;
     public Integer numeroIntentos;
 }

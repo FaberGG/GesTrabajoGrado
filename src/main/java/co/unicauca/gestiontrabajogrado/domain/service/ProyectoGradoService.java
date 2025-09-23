@@ -25,7 +25,8 @@ public class ProyectoGradoService implements IProyectoGradoService {
         p.setCodirectorId(req.codirectorId);
         p.setObjetivoGeneral(req.objetivoGeneral);
         p.setObjetivosEspecificos(req.objetivosEspecificos);
-        p.setEstudianteId(req.estudianteId);
+        p.setEstudiante1Id(req.estudiante1Id);
+        p.setEstudiante2Id(req.estudiante2Id);
         p = proyectoRepo.save(p);
 
         String ruta = archivoService.guardarArchivo(archivo, p.getId(), 1);
@@ -105,7 +106,8 @@ public class ProyectoGradoService implements IProyectoGradoService {
         d.codirectorId = p.getCodirectorId();
         d.objetivoGeneral = p.getObjetivoGeneral();
         d.objetivosEspecificos = p.getObjetivosEspecificos();
-        d.estudianteId = p.getEstudianteId();
+        d.estudiante1Id = p.getEstudiante1Id();
+        d.estudiante2Id = p.getEstudiante2Id();
         d.estado = p.getEstado();
         d.numeroIntentos = p.getNumeroIntentos();
         return d;

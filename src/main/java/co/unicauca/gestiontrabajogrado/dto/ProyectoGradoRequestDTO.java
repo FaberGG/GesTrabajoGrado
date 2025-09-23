@@ -9,5 +9,6 @@ public class ProyectoGradoRequestDTO {
     public Integer codirectorId; // opcional
     public String objetivoGeneral;
     public String objetivosEspecificos;
-    public Integer estudianteId; // opcional
+    public Integer estudiante1Id; // opcional
+    public  Integer estudiante2Id;
 }

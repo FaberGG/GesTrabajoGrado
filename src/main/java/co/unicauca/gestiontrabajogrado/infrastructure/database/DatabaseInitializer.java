@@ -31,14 +31,16 @@ public final class DatabaseInitializer {
                 codirector_id INTEGER,
                 objetivo_general TEXT NOT NULL,
                 objetivos_especificos TEXT NOT NULL,
-                estudiante_id INTEGER,
+                estudiante1_id INTEGER,
+                estudiante2_id INTEGER,
                 estado VARCHAR(50) NOT NULL DEFAULT 'EN_PROCESO' CHECK (estado IN ('EN_PROCESO', 'APROBADO', 'RECHAZADO', 'RECHAZADO_DEFINITIVO')),
                 numero_intentos INTEGER NOT NULL DEFAULT 1,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (director_id) REFERENCES usuarios(id),
                 FOREIGN KEY (codirector_id) REFERENCES usuarios(id),
-                FOREIGN KEY (estudiante_id) REFERENCES usuarios(id)
+                FOREIGN KEY (estudiante1_id) REFERENCES usuarios(id)
+                FOREIGN KEY (estudiante2_id) REFERENCES usuarios(id)
             );
 
             -- Tabla para versiones del Formato A

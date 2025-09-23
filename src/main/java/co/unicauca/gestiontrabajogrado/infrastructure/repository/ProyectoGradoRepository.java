@@ -7,7 +7,6 @@ import co.unicauca.gestiontrabajogrado.domain.model.enumEstadoProyecto;
 import co.unicauca.gestiontrabajogrado.infrastructure.database.DatabaseConnection;
 
 import java.sql.*;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -27,7 +26,7 @@ public class ProyectoGradoRepository implements IProyectoGradoRepository {
         String sql = """
             INSERT INTO proyecto_grado 
             (titulo, modalidad, fecha_creacion, director_id, codirector_id, 
-             objetivo_general, objetivos_especificos, estudiante_id, estado, numero_intentos)
+             objetivo_general, objetivos_especificos, estudiante1_id, estudiante2_id, estado, numero_intentos)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """;
 
@@ -48,12 +47,16 @@ public class ProyectoGradoRepository implements IProyectoGradoRepository {
             ps.setString(6, proyecto.getObjetivoGeneral());
             ps.setString(7, proyecto.getObjetivosEspecificos());
 
-            if (proyecto.getEstudianteId() != null) {
-                ps.setInt(8, proyecto.getEstudianteId());
+            if (proyecto.getEstudiante1Id() != null) {
+                ps.setInt(8, proyecto.getEstudiante1Id());
             } else {
                 ps.setNull(8, Types.INTEGER);
             }
-
+            if (proyecto.getEstudiante2Id() != null) {
+                ps.setInt(8, proyecto.getEstudiante2Id());
+            } else {
+                ps.setNull(8, Types.INTEGER);
+            }
             ps.setString(9, proyecto.getEstado().name());
             ps.setInt(10, proyecto.getNumeroIntentos());
 
@@ -76,7 +79,7 @@ public class ProyectoGradoRepository implements IProyectoGradoRepository {
         String sql = """
             UPDATE proyecto_grado SET 
             titulo = ?, modalidad = ?, director_id = ?, codirector_id = ?,
-            objetivo_general = ?, objetivos_especificos = ?, estudiante_id = ?,
+            objetivo_general = ?, objetivos_especificos = ?, estudiante1_id = ?, estudiante2_id = ?,
             estado = ?, numero_intentos = ?, updated_at = CURRENT_TIMESTAMP
             WHERE id = ?
         """;
@@ -97,8 +100,13 @@ public class ProyectoGradoRepository implements IProyectoGradoRepository {
             ps.setString(5, proyecto.getObjetivoGeneral());
             ps.setString(6, proyecto.getObjetivosEspecificos());
 
-            if (proyecto.getEstudianteId() != null) {
-                ps.setInt(7, proyecto.getEstudianteId());
+            if (proyecto.getEstudiante1Id() != null) {
+                ps.setInt(7, proyecto.getEstudiante1Id());
+            } else {
+                ps.setNull(7, Types.INTEGER);
+            }
+            if (proyecto.getEstudiante2Id() != null) {
+                ps.setInt(7, proyecto.getEstudiante2Id());
             } else {
                 ps.setNull(7, Types.INTEGER);
             }
@@ -169,7 +177,7 @@ public class ProyectoGradoRepository implements IProyectoGradoRepository {
 
     @Override
     public List<ProyectoGrado> findByEstudianteId(Integer estudianteId) {
-        String sql = "SELECT * FROM proyecto_grado WHERE estudiante_id = ? ORDER BY fecha_creacion DESC";
+        String sql = "SELECT * FROM proyecto_grado WHERE estudiante1_id = ? OR estudiante2_id = ? ORDER BY fecha_creacion DESC";
         return executeQuery(sql, estudianteId);
     }
 
@@ -292,7 +300,7 @@ public class ProyectoGradoRepository implements IProyectoGradoRepository {
 
         Integer estudianteId = rs.getInt("estudiante_id");
         if (!rs.wasNull()) {
-            proyecto.setEstudianteId(estudianteId);
+            proyecto.setEstudiante1Id(estudianteId);
         }
 
         proyecto.setEstado(enumEstadoProyecto.valueOf(rs.getString("estado")));

@@ -8,10 +8,11 @@ public class ProyectoGrado {
     private enumModalidad modalidad;
     private LocalDateTime fechaCreacion;
     private Integer directorId;
-    private Integer codirectorId; // opcional
+    private Integer codirectorId;
     private String objetivoGeneral;
     private String objetivosEspecificos;
-    private Integer estudianteId; // opcional
+    private Integer estudiante1Id;
+    private Integer estudiante2Id;
     private enumEstadoProyecto estado = enumEstadoProyecto.EN_PROCESO;
     private Integer numeroIntentos = 1;
 
@@ -38,8 +39,10 @@ public class ProyectoGrado {
     public void setObjetivoGeneral(String objetivoGeneral) { this.objetivoGeneral = objetivoGeneral; }
     public String getObjetivosEspecificos() { return objetivosEspecificos; }
     public void setObjetivosEspecificos(String objetivosEspecificos) { this.objetivosEspecificos = objetivosEspecificos; }
-    public Integer getEstudianteId() { return estudianteId; }
-    public void setEstudianteId(Integer estudianteId) { this.estudianteId = estudianteId; }
+    public Integer getEstudiante1Id() { return estudiante1Id; }
+    public void setEstudiante1Id(Integer estudiante1Id) { this.estudiante1Id = estudiante1Id; }
+    public Integer getEstudiante2Id() { return estudiante2Id; }
+    public void setEstudiante2Id(Integer estudiante2Id) { this.estudiante2Id = estudiante2Id; }
     public enumEstadoProyecto getEstado() { return estado; }
     public void setEstado(enumEstadoProyecto estado) { this.estado = estado; }
     public Integer getNumeroIntentos() { return numeroIntentos; }
