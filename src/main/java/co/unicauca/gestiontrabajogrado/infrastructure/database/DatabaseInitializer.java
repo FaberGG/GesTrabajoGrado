@@ -50,6 +50,8 @@ public final class DatabaseInitializer {
                 numero_intento INTEGER NOT NULL,
                 ruta_archivo VARCHAR(500) NOT NULL,
                 nombre_archivo VARCHAR(255) NOT NULL,
+                ruta_carta_aceptacion VARCHAR(500),
+                nombre_carta_aceptacion VARCHAR(255),
                 fecha_carga DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 estado VARCHAR(50) NOT NULL DEFAULT 'PENDIENTE' CHECK (estado IN ('PENDIENTE', 'APROBADO', 'RECHAZADO')),
                 observaciones TEXT,

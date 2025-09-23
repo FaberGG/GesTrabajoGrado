@@ -1,4 +1,3 @@
-
 package co.unicauca.gestiontrabajogrado.infrastructure.repository;
 
 import co.unicauca.gestiontrabajogrado.domain.model.FormatoA;
@@ -26,8 +25,9 @@ public class FormatoARepository implements IFormatoARepository {
         String sql = """
             INSERT INTO formato_a 
             (proyecto_grado_id, numero_intento, ruta_archivo, nombre_archivo, 
-             fecha_carga, estado, observaciones, evaluado_por, fecha_evaluacion)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+             ruta_carta_aceptacion, nombre_carta_aceptacion, fecha_carga, estado, 
+             observaciones, evaluado_por, fecha_evaluacion)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """;
 
         try (Connection c = DatabaseConnection.get();
@@ -37,25 +37,40 @@ public class FormatoARepository implements IFormatoARepository {
             ps.setInt(2, formato.getNumeroIntento());
             ps.setString(3, formato.getRutaArchivo());
             ps.setString(4, formato.getNombreArchivo());
-            ps.setTimestamp(5, Timestamp.valueOf(formato.getFechaCarga()));
-            ps.setString(6, formato.getEstado().name());
+
+            // Nuevos campos para carta de aceptación
+            if (formato.getRutaCartaAceptacion() != null) {
+                ps.setString(5, formato.getRutaCartaAceptacion());
+            } else {
+                ps.setNull(5, Types.VARCHAR);
+            }
+
+            if (formato.getNombreCartaAceptacion() != null) {
+                ps.setString(6, formato.getNombreCartaAceptacion());
+            } else {
+                ps.setNull(6, Types.VARCHAR);
+            }
+
+            ps.setTimestamp(7, Timestamp.valueOf(
+                    formato.getFechaCarga() != null ? formato.getFechaCarga() : LocalDateTime.now()));
+            ps.setString(8, formato.getEstado().name());
 
             if (formato.getObservaciones() != null) {
-                ps.setString(7, formato.getObservaciones());
+                ps.setString(9, formato.getObservaciones());
             } else {
-                ps.setNull(7, Types.VARCHAR);
+                ps.setNull(9, Types.VARCHAR);
             }
 
             if (formato.getEvaluadoPor() != null) {
-                ps.setInt(8, formato.getEvaluadoPor());
+                ps.setInt(10, formato.getEvaluadoPor());
             } else {
-                ps.setNull(8, Types.INTEGER);
+                ps.setNull(10, Types.INTEGER);
             }
 
             if (formato.getFechaEvaluacion() != null) {
-                ps.setTimestamp(9, Timestamp.valueOf(formato.getFechaEvaluacion()));
+                ps.setTimestamp(11, Timestamp.valueOf(formato.getFechaEvaluacion()));
             } else {
-                ps.setNull(9, Types.TIMESTAMP);
+                ps.setNull(11, Types.TIMESTAMP);
             }
 
             ps.executeUpdate();
@@ -80,8 +95,9 @@ public class FormatoARepository implements IFormatoARepository {
     public FormatoA update(FormatoA formato) {
         String sql = """
             UPDATE formato_a SET 
-            ruta_archivo = ?, nombre_archivo = ?, estado = ?, 
-            observaciones = ?, evaluado_por = ?, fecha_evaluacion = ?
+            ruta_archivo = ?, nombre_archivo = ?, ruta_carta_aceptacion = ?, 
+            nombre_carta_aceptacion = ?, estado = ?, observaciones = ?, 
+            evaluado_por = ?, fecha_evaluacion = ?
             WHERE id = ?
         """;
 
@@ -90,27 +106,41 @@ public class FormatoARepository implements IFormatoARepository {
 
             ps.setString(1, formato.getRutaArchivo());
             ps.setString(2, formato.getNombreArchivo());
-            ps.setString(3, formato.getEstado().name());
 
-            if (formato.getObservaciones() != null) {
-                ps.setString(4, formato.getObservaciones());
+            // Campos de carta de aceptación
+            if (formato.getRutaCartaAceptacion() != null) {
+                ps.setString(3, formato.getRutaCartaAceptacion());
+            } else {
+                ps.setNull(3, Types.VARCHAR);
+            }
+
+            if (formato.getNombreCartaAceptacion() != null) {
+                ps.setString(4, formato.getNombreCartaAceptacion());
             } else {
                 ps.setNull(4, Types.VARCHAR);
             }
 
-            if (formato.getEvaluadoPor() != null) {
-                ps.setInt(5, formato.getEvaluadoPor());
+            ps.setString(5, formato.getEstado().name());
+
+            if (formato.getObservaciones() != null) {
+                ps.setString(6, formato.getObservaciones());
             } else {
-                ps.setNull(5, Types.INTEGER);
+                ps.setNull(6, Types.VARCHAR);
+            }
+
+            if (formato.getEvaluadoPor() != null) {
+                ps.setInt(7, formato.getEvaluadoPor());
+            } else {
+                ps.setNull(7, Types.INTEGER);
             }
 
             if (formato.getFechaEvaluacion() != null) {
-                ps.setTimestamp(6, Timestamp.valueOf(formato.getFechaEvaluacion()));
+                ps.setTimestamp(8, Timestamp.valueOf(formato.getFechaEvaluacion()));
             } else {
-                ps.setNull(6, Types.TIMESTAMP);
+                ps.setNull(8, Types.TIMESTAMP);
             }
 
-            ps.setInt(7, formato.getId());
+            ps.setInt(9, formato.getId());
 
             int rowsAffected = ps.executeUpdate();
             if (rowsAffected == 0) {
@@ -304,6 +334,18 @@ public class FormatoARepository implements IFormatoARepository {
         formato.setNumeroIntento(rs.getInt("numero_intento"));
         formato.setRutaArchivo(rs.getString("ruta_archivo"));
         formato.setNombreArchivo(rs.getString("nombre_archivo"));
+
+        // Mapear nuevos campos de carta de aceptación
+        String rutaCarta = rs.getString("ruta_carta_aceptacion");
+        if (!rs.wasNull()) {
+            formato.setRutaCartaAceptacion(rutaCarta);
+        }
+
+        String nombreCarta = rs.getString("nombre_carta_aceptacion");
+        if (!rs.wasNull()) {
+            formato.setNombreCartaAceptacion(nombreCarta);
+        }
+
         formato.setFechaCarga(rs.getTimestamp("fecha_carga").toLocalDateTime());
         formato.setEstado(enumEstadoFormato.valueOf(rs.getString("estado")));
 

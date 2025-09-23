@@ -8,6 +8,8 @@ public class FormatoA {
     private Integer numeroIntento;
     private String rutaArchivo;
     private String nombreArchivo;
+    private String rutaCartaAceptacion;
+    private String nombreCartaAceptacion;
     private LocalDateTime fechaCarga;
     private enumEstadoFormato estado = enumEstadoFormato.PENDIENTE;
     private String observaciones;
@@ -20,15 +22,24 @@ public class FormatoA {
         this.observaciones = observaciones;
         this.fechaEvaluacion = LocalDateTime.now();
     }
+
     public void rechazar(Integer evaluadorId, String observaciones) {
         this.estado = enumEstadoFormato.RECHAZADO;
         this.evaluadoPor = evaluadorId;
         this.observaciones = observaciones;
         this.fechaEvaluacion = LocalDateTime.now();
     }
-    public boolean esUltimoIntento() { return this.numeroIntento != null && this.numeroIntento >= 3; }
 
-    // Getters & Setters
+    public boolean esUltimoIntento() {
+        return this.numeroIntento != null && this.numeroIntento >= 3;
+    }
+
+    // Métodos para validar carta de aceptación
+    public boolean tieneCartaAceptacion() {
+        return rutaCartaAceptacion != null && !rutaCartaAceptacion.trim().isEmpty();
+    }
+
+    // Getters y setters existentes...
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
     public Integer getProyectoGradoId() { return proyectoGradoId; }
@@ -39,6 +50,11 @@ public class FormatoA {
     public void setRutaArchivo(String rutaArchivo) { this.rutaArchivo = rutaArchivo; }
     public String getNombreArchivo() { return nombreArchivo; }
     public void setNombreArchivo(String nombreArchivo) { this.nombreArchivo = nombreArchivo; }
+
+    public String getRutaCartaAceptacion() { return rutaCartaAceptacion; }
+    public void setRutaCartaAceptacion(String rutaCartaAceptacion) { this.rutaCartaAceptacion = rutaCartaAceptacion; }
+    public String getNombreCartaAceptacion() { return nombreCartaAceptacion; }
+    public void setNombreCartaAceptacion(String nombreCartaAceptacion) { this.nombreCartaAceptacion = nombreCartaAceptacion; }
     public LocalDateTime getFechaCarga() { return fechaCarga; }
     public void setFechaCarga(LocalDateTime fechaCarga) { this.fechaCarga = fechaCarga; }
     public enumEstadoFormato getEstado() { return estado; }
