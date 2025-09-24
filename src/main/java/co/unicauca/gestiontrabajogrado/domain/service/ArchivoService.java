@@ -70,7 +70,7 @@ public class ArchivoService implements IArchivoService {
     @Override
     public String generarNombreUnico(String nombreOriginal, Integer proyectoId, Integer intento) {
         String limpio = nombreOriginal.replaceAll("[^a-zA-Z0-9_.-]", "_")
-                .replaceAll("\\.pdf$", "");
+                .replaceAll("(?i)\\.pdf$", "");
         return String.format("P%d_I%d_%s_%s.pdf",
                 proyectoId, intento,
                 UUID.randomUUID().toString().substring(0, 8),
@@ -80,7 +80,7 @@ public class ArchivoService implements IArchivoService {
     @Override
     public String generarNombreUnicoCarta(String nombreOriginal, Integer proyectoId, Integer intento) {
         String limpio = nombreOriginal.replaceAll("[^a-zA-Z0-9_.-]", "_")
-                .replaceAll("\\.pdf$", "");
+                .replaceAll("(?i)\\.pdf$", "");
         return String.format("CARTA_P%d_I%d_%s_%s.pdf",
                 proyectoId, intento,
                 UUID.randomUUID().toString().substring(0, 8),

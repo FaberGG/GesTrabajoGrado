@@ -39,8 +39,9 @@ public final class DatabaseInitializer {
                 updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (director_id) REFERENCES usuarios(id),
                 FOREIGN KEY (codirector_id) REFERENCES usuarios(id),
-                FOREIGN KEY (estudiante1_id) REFERENCES usuarios(id)
+                FOREIGN KEY (estudiante1_id) REFERENCES usuarios(id),
                 FOREIGN KEY (estudiante2_id) REFERENCES usuarios(id)
+                                                                    
             );
 
             -- Tabla para versiones del Formato A

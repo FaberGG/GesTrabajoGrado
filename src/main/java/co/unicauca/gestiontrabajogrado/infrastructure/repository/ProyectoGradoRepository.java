@@ -22,13 +22,15 @@ public class ProyectoGradoRepository implements IProyectoGradoRepository {
         }
     }
 
+    // ProyectoGradoRepository.java
+
     private ProyectoGrado insert(ProyectoGrado proyecto) {
         String sql = """
-            INSERT INTO proyecto_grado 
-            (titulo, modalidad, fecha_creacion, director_id, codirector_id, 
-             objetivo_general, objetivos_especificos, estudiante1_id, estudiante2_id, estado, numero_intentos)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """;
+        INSERT INTO proyecto_grado
+        (titulo, modalidad, fecha_creacion, director_id, codirector_id,
+         objetivo_general, objetivos_especificos, estudiante1_id, estudiante2_id, estado, numero_intentos)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """;
 
         try (Connection c = DatabaseConnection.get();
              PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -52,13 +54,15 @@ public class ProyectoGradoRepository implements IProyectoGradoRepository {
             } else {
                 ps.setNull(8, Types.INTEGER);
             }
+
             if (proyecto.getEstudiante2Id() != null) {
-                ps.setInt(8, proyecto.getEstudiante2Id());
+                ps.setInt(9, proyecto.getEstudiante2Id());
             } else {
-                ps.setNull(8, Types.INTEGER);
+                ps.setNull(9, Types.INTEGER);
             }
-            ps.setString(9, proyecto.getEstado().name());
-            ps.setInt(10, proyecto.getNumeroIntentos());
+
+            ps.setString(10, proyecto.getEstado().name());
+            ps.setInt(11, proyecto.getNumeroIntentos() != null ? proyecto.getNumeroIntentos() : 1);
 
             ps.executeUpdate();
 
@@ -67,22 +71,22 @@ public class ProyectoGradoRepository implements IProyectoGradoRepository {
                     proyecto.setId(keys.getInt(1));
                 }
             }
-
             return proyecto;
 
         } catch (SQLException e) {
             throw new RuntimeException("Error guardando proyecto de grado: " + e.getMessage(), e);
         }
     }
+
     @Override
     public ProyectoGrado update(ProyectoGrado proyecto) {
         String sql = """
-            UPDATE proyecto_grado SET 
-            titulo = ?, modalidad = ?, director_id = ?, codirector_id = ?,
-            objetivo_general = ?, objetivos_especificos = ?, estudiante1_id = ?, estudiante2_id = ?,
-            estado = ?, numero_intentos = ?, updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?
-        """;
+        UPDATE proyecto_grado SET
+        titulo = ?, modalidad = ?, director_id = ?, codirector_id = ?,
+        objetivo_general = ?, objetivos_especificos = ?, estudiante1_id = ?, estudiante2_id = ?,
+        estado = ?, numero_intentos = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+    """;
 
         try (Connection c = DatabaseConnection.get();
              PreparedStatement ps = c.prepareStatement(sql)) {
@@ -105,27 +109,28 @@ public class ProyectoGradoRepository implements IProyectoGradoRepository {
             } else {
                 ps.setNull(7, Types.INTEGER);
             }
+
             if (proyecto.getEstudiante2Id() != null) {
-                ps.setInt(7, proyecto.getEstudiante2Id());
+                ps.setInt(8, proyecto.getEstudiante2Id());
             } else {
-                ps.setNull(7, Types.INTEGER);
+                ps.setNull(8, Types.INTEGER);
             }
 
-            ps.setString(8, proyecto.getEstado().name());
-            ps.setInt(9, proyecto.getNumeroIntentos());
-            ps.setInt(10, proyecto.getId());
+            ps.setString(9, proyecto.getEstado().name());
+            ps.setInt(10, proyecto.getNumeroIntentos() != null ? proyecto.getNumeroIntentos() : 1);
+            ps.setInt(11, proyecto.getId());
 
-            int rowsAffected = ps.executeUpdate();
-            if (rowsAffected == 0) {
+            int rows = ps.executeUpdate();
+            if (rows == 0) {
                 throw new RuntimeException("No se encontró el proyecto con ID: " + proyecto.getId());
             }
-
             return proyecto;
 
         } catch (SQLException e) {
             throw new RuntimeException("Error actualizando proyecto de grado: " + e.getMessage(), e);
         }
     }
+
 
     @Override
     public Optional<ProyectoGrado> findById(Integer id) {
@@ -178,8 +183,10 @@ public class ProyectoGradoRepository implements IProyectoGradoRepository {
     @Override
     public List<ProyectoGrado> findByEstudianteId(Integer estudianteId) {
         String sql = "SELECT * FROM proyecto_grado WHERE estudiante1_id = ? OR estudiante2_id = ? ORDER BY fecha_creacion DESC";
-        return executeQuery(sql, estudianteId);
+        return executeQuery(sql, estudianteId, estudianteId);
     }
+
+
 
     @Override
     public List<ProyectoGrado> findByEstado(enumEstadoProyecto estado) {
@@ -286,26 +293,50 @@ public class ProyectoGradoRepository implements IProyectoGradoRepository {
 
         proyecto.setId(rs.getInt("id"));
         proyecto.setTitulo(rs.getString("titulo"));
-        proyecto.setModalidad(enumModalidad.valueOf(rs.getString("modalidad")));
-        proyecto.setFechaCreacion(rs.getTimestamp("fecha_creacion").toLocalDateTime());
-        proyecto.setDirectorId(rs.getInt("director_id"));
 
-        Integer codirectorId = rs.getInt("codirector_id");
-        if (!rs.wasNull()) {
-            proyecto.setCodirectorId(codirectorId);
+        // modalidad
+        String modalidad = rs.getString("modalidad");
+        if (modalidad != null) {
+            proyecto.setModalidad(enumModalidad.valueOf(modalidad));
         }
 
+        // fecha_creacion (evita NPE si viene null)
+        java.sql.Timestamp tsCreacion = rs.getTimestamp("fecha_creacion");
+        if (tsCreacion != null) {
+            proyecto.setFechaCreacion(tsCreacion.toLocalDateTime());
+        }
+
+        // director y codirector
+        int dir = rs.getInt("director_id");
+        if (!rs.wasNull()) proyecto.setDirectorId(dir);
+
+        int codir = rs.getInt("codirector_id");
+        if (!rs.wasNull()) proyecto.setCodirectorId(codir);
+
+        // textos
         proyecto.setObjetivoGeneral(rs.getString("objetivo_general"));
         proyecto.setObjetivosEspecificos(rs.getString("objetivos_especificos"));
 
-        Integer estudianteId = rs.getInt("estudiante_id");
-        if (!rs.wasNull()) {
-            proyecto.setEstudiante1Id(estudianteId);
+        // ⚠️ aquí estaba el problema: mapear ambos estudiantes
+        int e1 = rs.getInt("estudiante1_id");
+        if (!rs.wasNull()) proyecto.setEstudiante1Id(e1);
+
+        int e2 = rs.getInt("estudiante2_id");
+        if (!rs.wasNull()) proyecto.setEstudiante2Id(e2);
+
+        // estado
+        String estado = rs.getString("estado");
+        if (estado != null) {
+            proyecto.setEstado(enumEstadoProyecto.valueOf(estado));
         }
 
-        proyecto.setEstado(enumEstadoProyecto.valueOf(rs.getString("estado")));
-        proyecto.setNumeroIntentos(rs.getInt("numero_intentos"));
+        // intentos
+        int intentos = rs.getInt("numero_intentos");
+        if (!rs.wasNull()) proyecto.setNumeroIntentos(intentos);
 
         return proyecto;
     }
+
+
+
 }

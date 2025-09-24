@@ -7,4 +7,7 @@ public interface IUserRepository {
     boolean emailExists(String email);
     User save(User u);
     Optional<User> findByEmail(String email);
+    Optional<User> findById(Integer id);
+    boolean existsById(Integer id);
+
 }
