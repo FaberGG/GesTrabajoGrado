@@ -75,4 +75,43 @@ public class UserRepository implements IUserRepository {
             throw new RuntimeException("Error buscando usuario por email: " + e.getMessage(), e);
         }
     }
+
+    @Override
+    public Optional<User> findById(Integer id) {
+        String sql = "SELECT * FROM usuarios WHERE id = ?";
+        try (Connection c = DatabaseConnection.get();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) return Optional.empty();
+                return Optional.of(new User(
+                        rs.getInt("id"),
+                        rs.getString("nombres"),
+                        rs.getString("apellidos"),
+                        rs.getString("celular"),
+                        enumProgram.valueOf(rs.getString("enumProgram")),
+                        enumRol.valueOf(rs.getString("enumRol")),
+                        rs.getString("email"),
+                        rs.getString("password")
+                ));
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Error buscando usuario por id: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public boolean existsById(Integer id) {
+        String sql = "SELECT 1 FROM usuarios WHERE id = ?";
+        try (Connection c = DatabaseConnection.get();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Error comprobando existencia de usuario: " + e.getMessage(), e);
+        }
+    }
+
 }

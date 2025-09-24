@@ -48,13 +48,17 @@ class DatabaseInitializerTest {
      * Prueba que el metodo ensureCreated() no lance una excepción y cree el archivo de la base de datos.
      */
     @Test
-    void testEnsureCreatedCreatesDatabaseFile() {
-        // Act
+    void testEnsureCreatedCreatesDatabaseFile() throws Exception {
+        var path = java.nio.file.Paths.get("target", "initializer-test.db");
+        java.nio.file.Files.deleteIfExists(path);
+
+        System.setProperty("db.url", "jdbc:sqlite:" + path.toString());
         DatabaseInitializer.ensureCreated();
 
-        // Assert
-        assertTrue(Files.exists(DB_PATH), "El archivo de la base de datos debe ser creado.");
+        assertTrue(java.nio.file.Files.exists(path), "El archivo de la base de datos debe ser creado.");
     }
+
+
 
     /**
      * Prueba que el metodo ensureCreated() cree la tabla 'usuarios' correctamente.
