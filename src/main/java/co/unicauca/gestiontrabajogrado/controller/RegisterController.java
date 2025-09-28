@@ -131,7 +131,7 @@ public class RegisterController {
      */
     private void validateEmail(String email) {
         EmailPolicy emailPolicy = EmailPolicy.getInstance();
-        if (emailPolicy.isInstitutional(email)) {
+        if (!emailPolicy.isInstitutional(email)) {
             throw new IllegalArgumentException("Debe usar un email institucional válido (@unicauca.edu.co).");
         }
     }
