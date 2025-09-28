@@ -202,7 +202,7 @@ public class RegisterView extends JFrame {
         nombresField = createStyledTextField("Nombres *");
         apellidosField = createStyledTextField("Apellidos *");
         identificacionField = createStyledTextField("Identificación *");
-        celularField = createStyledTextField("Celular *");
+        celularField = createStyledTextField("Celular ");
         emailField = createStyledTextField("E-mail *");
         passwordField = createStyledPasswordField("Contraseña *");
 
@@ -765,7 +765,7 @@ public class RegisterView extends JFrame {
             }
         }
         
-        System.out.println("⚠ Universidad del Cauca usando fuente por defecto: SansSerif");
+        System.out.println(" Universidad del Cauca usando fuente por defecto: SansSerif");
         return new Font("SansSerif", style, size);
     }
 
