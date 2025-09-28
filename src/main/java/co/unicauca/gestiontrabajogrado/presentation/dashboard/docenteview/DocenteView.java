@@ -268,7 +268,7 @@ public class DocenteView extends JFrame {
             setBorder(new EmptyBorder(16,16,16,16));
             setBackground(C_GRIS_FONDO);
 
-            // Banda “Panel Docente”
+            // Banda "Panel Docente"
             banda.setLayout(new BorderLayout());
             JLabel title = new JLabel("Panel Docente", SwingConstants.LEFT);
             title.setForeground(Color.WHITE);
@@ -361,23 +361,48 @@ public class DocenteView extends JFrame {
         }
     }
 
-    // ====== Estudiantes con avatar azul + scroll ======
+    // ====== Estudiantes con avatar azul + scroll (CORREGIDO) ======
     private static class EstudiantesList extends JPanel {
         EstudiantesList(){
             setOpaque(false);
-            setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+            setLayout(new BorderLayout()); // Cambio principal: BorderLayout en lugar de BoxLayout
         }
+        
         void setData(List<String> nombres){
             removeAll();
-            if (nombres != null) {
-                for (String n : nombres) { add(fila(n)); add(Box.createVerticalStrut(8)); }
+            
+            JPanel listPanel = new JPanel();
+            listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
+            listPanel.setOpaque(false);
+            
+            if (nombres != null && !nombres.isEmpty()) {
+                for (int i = 0; i < nombres.size(); i++) {
+                    String nombre = nombres.get(i);
+                    listPanel.add(fila(nombre));
+                    if (i < nombres.size() - 1) { // No agregar espacio después del último elemento
+                        listPanel.add(Box.createVerticalStrut(8));
+                    }
+                }
+            } else {
+                // Panel vacío si no hay estudiantes
+                JLabel emptyLabel = new JLabel("No hay estudiantes asignados", SwingConstants.CENTER);
+                emptyLabel.setForeground(new Color(120, 120, 120));
+                emptyLabel.setFont(F_BODY);
+                listPanel.add(emptyLabel);
             }
-            add(Box.createVerticalGlue());
-            revalidate(); repaint();
+            
+            // Agregamos el panel de lista en la parte superior
+            add(listPanel, BorderLayout.NORTH);
+            
+            revalidate(); 
+            repaint();
         }
+        
         private JComponent fila(String nombre){
             JLabel avatar = new JLabel(iniciales(nombre), SwingConstants.CENTER);
             avatar.setPreferredSize(new Dimension(32,32));
+            avatar.setMinimumSize(new Dimension(32,32)); // Agregado para estabilidad
+            avatar.setMaximumSize(new Dimension(32,32)); // Agregado para estabilidad
             avatar.setOpaque(true);
             avatar.setBackground(new Color(215, 234, 255));
             avatar.setForeground(new Color(10, 96, 180));
@@ -389,7 +414,8 @@ public class DocenteView extends JFrame {
 
             JPanel chip = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 6));
             chip.setOpaque(false);
-            chip.add(avatar); chip.add(lbl);
+            chip.add(avatar); 
+            chip.add(lbl);
 
             JPanel card = new JPanel(new BorderLayout());
             card.setOpaque(true);
@@ -399,15 +425,22 @@ public class DocenteView extends JFrame {
                     new EmptyBorder(6,10,6,10)
             ));
             card.add(chip, BorderLayout.WEST);
+            
+            // Configuración de tamaño más estable
+            card.setPreferredSize(new Dimension(card.getPreferredSize().width, 50));
+            card.setMinimumSize(new Dimension(200, 50));
             card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
+            
             return card;
         }
+        
         private static String iniciales(String n){
+            if (n == null || n.trim().isEmpty()) return "?";
             String[] p = n.trim().split("\\s+");
-            String a = p.length>0 ? p[0].substring(0,1) : "";
-            String b = p.length>1 ? p[1].substring(0,1) : "";
-            String r = (a+b).toUpperCase();
-            return r.isEmpty()? "?" : r;
+            String a = p.length > 0 && !p[0].isEmpty() ? p[0].substring(0,1) : "";
+            String b = p.length > 1 && !p[1].isEmpty() ? p[1].substring(0,1) : "";
+            String r = (a + b).toUpperCase();
+            return r.isEmpty() ? "?" : r;
         }
     }
 
@@ -417,27 +450,59 @@ public class DocenteView extends JFrame {
         public final String fecha;
         public PropuestaItem(String titulo, String fecha){ this.titulo=titulo; this.fecha=fecha; }
     }
+    
+    // ====== Propuestas con ícono documento rojo + scroll (CORREGIDO) ======
     private static class PropuestasList extends JPanel {
-        PropuestasList(){ setOpaque(false); setLayout(new BoxLayout(this, BoxLayout.Y_AXIS)); }
+        PropuestasList(){ 
+            setOpaque(false); 
+            setLayout(new BorderLayout()); // Cambio principal: BorderLayout en lugar de BoxLayout
+        }
+        
         void setData(List<PropuestaItem> items){
             removeAll();
-            if (items != null) {
-                for (PropuestaItem it : items) { add(item(it)); add(Box.createVerticalStrut(8)); }
+            
+            JPanel listPanel = new JPanel();
+            listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
+            listPanel.setOpaque(false);
+            
+            if (items != null && !items.isEmpty()) {
+                for (int i = 0; i < items.size(); i++) {
+                    PropuestaItem item = items.get(i);
+                    listPanel.add(item(item));
+                    if (i < items.size() - 1) { // No agregar espacio después del último elemento
+                        listPanel.add(Box.createVerticalStrut(8));
+                    }
+                }
+            } else {
+                // Panel vacío si no hay propuestas
+                JLabel emptyLabel = new JLabel("No hay propuestas registradas", SwingConstants.CENTER);
+                emptyLabel.setForeground(new Color(120, 120, 120));
+                emptyLabel.setFont(F_BODY);
+                listPanel.add(emptyLabel);
             }
-            add(Box.createVerticalGlue());
-            revalidate(); repaint();
+            
+            // Agregamos el panel de lista en la parte superior
+            add(listPanel, BorderLayout.NORTH);
+            
+            revalidate(); 
+            repaint();
         }
+        
         private JComponent item(PropuestaItem it){
             JLabel icon = new JLabel(new DocIcon(18, C_ROJO_1));
+            icon.setPreferredSize(new Dimension(18, 22)); // Tamaño fijo para el icono
+            
             JLabel title = new JLabel(it.titulo);
             title.setFont(F_BODY);
+            
             JLabel time = new JLabel(it.fecha, SwingConstants.RIGHT);
             time.setFont(new Font("SansSerif", Font.PLAIN, 12));
             time.setForeground(new Color(90,90,90));
 
             JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 6));
             left.setOpaque(false);
-            left.add(icon); left.add(title);
+            left.add(icon); 
+            left.add(title);
 
             JPanel line = new JPanel(new BorderLayout());
             line.setOpaque(false);
@@ -452,7 +517,12 @@ public class DocenteView extends JFrame {
                 new EmptyBorder(6,10,6,10)
             ));
             card.add(line, BorderLayout.CENTER);
+            
+            // Configuración de tamaño más estable
+            card.setPreferredSize(new Dimension(card.getPreferredSize().width, 50));
+            card.setMinimumSize(new Dimension(200, 50));
             card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
+            
             return card;
         }
     }
@@ -519,213 +589,259 @@ public class DocenteView extends JFrame {
     }
 
     // ======================== MODAL: Nueva Propuesta ========================
-    private static class SubirPropuestaModal extends JPanel {
-        private static final Color C_BORDE_SUAVE = DocenteView.C_BORDE_SUAVE;
-        private static final Color C_ROJO_1      = DocenteView.C_ROJO_1;
-        private static final Color C_ROJO_2      = DocenteView.C_ROJO_2;
-        private static final Font  F_H2          = DocenteView.F_H2;
-        private static final Font  F_H3          = DocenteView.F_H3;
-        private static final Font  F_BODY        = DocenteView.F_BODY;
+    // ======================== MODAL: Nueva Propuesta ========================
+private static class SubirPropuestaModal extends JPanel {
+    private static final Color C_BORDE_SUAVE = DocenteView.C_BORDE_SUAVE;
+    private static final Color C_ROJO_1      = DocenteView.C_ROJO_1;
+    private static final Color C_ROJO_2      = DocenteView.C_ROJO_2;
+    private static final Font  F_H2          = DocenteView.F_H2;
+    private static final Font  F_H3          = DocenteView.F_H3;
+    private static final Font  F_BODY        = DocenteView.F_BODY;
 
-        // Campos
-        final JTextField tfTitulo     = text("Ingrese el título del proyecto de grado");
-        
-        final JComboBox<String> cbModalidad =
-    new JComboBox<>(new String[]{
-        "Seleccione modalidad",
-        "Plan Coterminal",
-        "Investigación",
-        "Práctica profesional"
-    });
+    // Enum para modalidades (más fiable que comparar Strings)
+    private enum Modalidad {
+        SELECCION("Seleccione modalidad"),
+        PLAN_COTERMINAL("Plan Coterminal"),
+        INVESTIGACION("Investigación"),
+        PRACTICA("Práctica profesional");
 
+        final String label;
+        Modalidad(String l){ this.label = l; }
+        @Override public String toString(){ return label; }
+    }
 
-        final DatePickerField dpFecha = new DatePickerField(); // calendario
-        final JTextField tfDirId      = text("Número de identificación del director");
-        final JTextField tfCoDirNom   = text("Nombre completo del codirector");
-        final JTextArea  taObjGeneral     = area("Describe el objetivo general…");
-        final JTextArea  taObjEspecificos = area("Describe los objetivos específicos…");
+    // Campos
+    final JTextField tfTitulo = text("Ingrese el título del proyecto de grado");
+    final JComboBox<Modalidad> cbModalidad = createModalidadComboBox();  // <— tipo cambiado
+    final DatePickerField dpFecha = new DatePickerField(); // calendario
+    final JTextField tfDirId    = text("Número de identificación del director");
+    final JTextField tfCoDirNom = text("Nombre completo del codirector");
+    final JTextArea  taObjGeneral     = area("Describe el objetivo general…");
+    final JTextArea  taObjEspecificos = area("Describe los objetivos específicos…");
 
-        // DnD PDFs
-        final DropFileField dfFormatoA = new DropFileField();
-        final DropFileField dfCarta    = new DropFileField();
+    // DnD PDFs
+    final DropFileField dfFormatoA = new DropFileField();
+    final DropFileField dfCarta    = new DropFileField();
+
+    // Acciones
+    private Runnable onSubmitValid = new Runnable(){ public void run(){} };
+    private Runnable onCancel      = new Runnable(){ public void run(){} };
+
+    // ComboBox de Modalidad (heavyweight popup para que no lo tape el glass pane)
+    private static JComboBox<Modalidad> createModalidadComboBox() {
+        javax.swing.DefaultComboBoxModel<Modalidad> model =
+                new javax.swing.DefaultComboBoxModel<>(Modalidad.values());
+
+        JComboBox<Modalidad> combo = new JComboBox<>(model);
+        combo.setSelectedItem(Modalidad.SELECCION);
+        combo.setFont(F_BODY);
+        combo.setBackground(Color.WHITE);
+        combo.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+            new javax.swing.border.LineBorder(C_BORDE_SUAVE, 1, true),
+            new EmptyBorder(4, 8, 4, 8)
+        ));
+        combo.setFocusable(true);
+        combo.setEditable(false);
+        combo.setPreferredSize(new Dimension(200, 35));
+        combo.setMinimumSize(new Dimension(150, 35));
+
+        // CLAVE: que el popup sea "heavyweight"
+        combo.setLightWeightPopupEnabled(false);
+
+        return combo;
+    }
+
+    SubirPropuestaModal() {
+        setLayout(new BorderLayout());
+        setOpaque(true);
+        setBackground(Color.WHITE);
+        setBorder(new javax.swing.border.LineBorder(C_BORDE_SUAVE, 1, true));
+
+        // Header
+        JPanel header = new GradientePanel(C_ROJO_1, C_ROJO_2, 16);
+        header.setLayout(new BorderLayout());
+        JLabel title = new JLabel("NUEVA PROPUESTA DE PROYECTO DE GRADO", SwingConstants.CENTER);
+        title.setForeground(Color.WHITE);
+        title.setFont(F_H2.deriveFont(22f));
+        title.setBorder(new EmptyBorder(10,0,10,0));
+        JButton btnX = new JButton("✕");
+        btnX.setForeground(Color.WHITE);
+        btnX.setOpaque(false);
+        btnX.setBorder(javax.swing.BorderFactory.createEmptyBorder(6,10,6,10));
+        btnX.setContentAreaFilled(false);
+        btnX.setFont(F_H3);
+        btnX.addActionListener(e -> onCancel.run());
+        header.add(title, BorderLayout.CENTER);
+        header.add(btnX, BorderLayout.EAST);
+        add(header, BorderLayout.NORTH);
+
+        // Formulario con scroll
+        JPanel form = new JPanel(new GridBagLayout());
+        form.setOpaque(false);
+        form.setBorder(new EmptyBorder(16,18,16,18));
+        GridBagConstraints c = new GridBagConstraints();
+        c.insets = new Insets(8,8,8,8);
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 1.0;
+        int y = 0;
+
+        addFull(form, c, y++, "Título del Proyecto *", tfTitulo);
+        addPair(form, c, y++, "Modalidad *", cbModalidad, "Fecha Actual *", dpFecha);
+        addPair(form, c, y++, "Identificación de director *", tfDirId, "Codirector del proyecto *", tfCoDirNom);
+        addFull(form, c, y++, "Objetivo General *", taScroll(taObjGeneral));
+        addFull(form, c, y++, "Objetivos Específicos *", taScroll(taObjEspecificos));
+
+        addFull(form, c, y++, "Formato A (PDF) *", dfFormatoA);
+        dfFormatoA.setLine1("✎  Arrastre el archivo aquí o haga clic para seleccionar");
+        dfFormatoA.setLine2("Solo un archivo PDF");
+
+        addFull(form, c, y++, "Carta de Aceptación de la empresa (PDF)", dfCarta);
+        dfCarta.setLine1("✎  Arrastre el archivo aquí o haga clic para seleccionar");
+        dfCarta.setLine2("Solo un archivo PDF");
+
+        JScrollPane sc = new JScrollPane(form);
+        sc.setBorder(javax.swing.BorderFactory.createEmptyBorder());
+        sc.getViewport().setBackground(Color.WHITE);
+        add(sc, BorderLayout.CENTER);
 
         // Acciones
-        private Runnable onSubmitValid = new Runnable(){ public void run(){} };
-        private Runnable onCancel      = new Runnable(){ public void run(){} };
+        JPanel actions = new JPanel(new FlowLayout(FlowLayout.CENTER, 14, 12));
+        actions.setOpaque(false);
 
-        SubirPropuestaModal() {
-            setLayout(new BorderLayout());
-            setOpaque(true);
-            setBackground(Color.WHITE);
-            setBorder(new javax.swing.border.LineBorder(C_BORDE_SUAVE, 1, true));
+        RoundedButton btnCancelar = RoundedButton.neutral("Cancelar");
+        btnCancelar.putClientProperty("role", "cancel");
+        btnCancelar.addActionListener(e -> onCancel.run());
 
-            // Header
-            JPanel header = new GradientePanel(C_ROJO_1, C_ROJO_2, 16);
-            header.setLayout(new BorderLayout());
-            JLabel title = new JLabel("NUEVA PROPUESTA DE PROYECTO DE GRADO", SwingConstants.CENTER);
-            title.setForeground(Color.WHITE);
-            title.setFont(F_H2.deriveFont(22f));
-            title.setBorder(new EmptyBorder(10,0,10,0));
-            JButton btnX = new JButton("✕");
-            btnX.setForeground(Color.WHITE);
-            btnX.setOpaque(false);
-            btnX.setBorder(javax.swing.BorderFactory.createEmptyBorder(6,10,6,10));
-            btnX.setContentAreaFilled(false);
-            btnX.setFont(F_H3);
-            btnX.addActionListener(e -> onCancel.run());
-            header.add(title, BorderLayout.CENTER);
-            header.add(btnX, BorderLayout.EAST);
-            add(header, BorderLayout.NORTH);
+        RoundedButton btnEnviar = RoundedButton.primary("Enviar Propuesta");
+        btnEnviar.addActionListener(e -> { if (validar()) onSubmitValid.run(); });
 
-            // Formulario con scroll
-            JPanel form = new JPanel(new GridBagLayout());
-            form.setOpaque(false);
-            form.setBorder(new EmptyBorder(16,18,16,18));
-            GridBagConstraints c = new GridBagConstraints();
-            c.insets = new Insets(8,8,8,8);
-            c.fill = GridBagConstraints.HORIZONTAL;
-            c.weightx = 1.0;
-            int y = 0;
+        actions.add(btnCancelar);
+        actions.add(btnEnviar);
+        add(actions, BorderLayout.SOUTH);
 
-            addFull(form, c, y++, "Título del Proyecto *", tfTitulo);
-            addPair(form, c, y++, "Modalidad *", cbModalidad, "Fecha Actual *", dpFecha);
-            addPair(form, c, y++, "Identificación de director *", tfDirId, "Codirector del proyecto *", tfCoDirNom);
-            addFull(form, c, y++, "Objetivo General *", taScroll(taObjGeneral));
-            addFull(form, c, y++, "Objetivos Específicos *", taScroll(taObjEspecificos));
-
-            addFull(form, c, y++, "Formato A (PDF) *", dfFormatoA);
-            dfFormatoA.setLine1("✎  Arrastre el archivo aquí o haga clic para seleccionar");
-            dfFormatoA.setLine2("Solo un archivo PDF");
-
-            addFull(form, c, y++, "Carta de Aceptación de la empresa (PDF)", dfCarta);
-            dfCarta.setLine1("✎  Arrastre el archivo aquí o haga clic para seleccionar");
-            dfCarta.setLine2("Solo un archivo PDF");
-
-            JScrollPane sc = new JScrollPane(form);
-            sc.setBorder(javax.swing.BorderFactory.createEmptyBorder());
-            sc.getViewport().setBackground(Color.WHITE);
-            add(sc, BorderLayout.CENTER);
-
-            // Acciones
-            JPanel actions = new JPanel(new FlowLayout(FlowLayout.CENTER, 14, 12));
-            actions.setOpaque(false);
-
-            RoundedButton btnCancelar = RoundedButton.neutral("Cancelar");
-            btnCancelar.putClientProperty("role", "cancel");
-            btnCancelar.addActionListener(e -> onCancel.run());
-
-            RoundedButton btnEnviar = RoundedButton.primary("Enviar Propuesta");
-            btnEnviar.addActionListener(e -> { if (validar()) onSubmitValid.run(); });
-
-            actions.add(btnCancelar);
-            actions.add(btnEnviar);
-            add(actions, BorderLayout.SOUTH);
-
-            actualizarCarta();
-            cbModalidad.addActionListener(e -> actualizarCarta());
-        }
-
-        // ====== VALIDACIÓN ======
-        private boolean validar(){
-            StringBuilder sb = new StringBuilder();
-            if (isEmpty(tfTitulo.getText()))          sb.append("• Título del proyecto es obligatorio.\n");
-            if (cbModalidad.getSelectedIndex()<=0)    sb.append("• Selecciona una modalidad.\n");
-            if (isEmpty(dpFecha.getDateString()))     sb.append("• Fecha actual es obligatoria.\n");
-            if (isEmpty(tfDirId.getText()))           sb.append("• Identificación de director es obligatoria.\n");
-            if (isEmpty(tfCoDirNom.getText()))        sb.append("• Codirector del proyecto es obligatorio.\n");
-            if (isEmpty(taObjGeneral.getText()))      sb.append("• Objetivo General es obligatorio.\n");
-            if (isEmpty(taObjEspecificos.getText()))  sb.append("• Objetivos Específicos son obligatorios.\n");
-            if (!dfFormatoA.hasFile())                sb.append("• Debes adjuntar el Formato A (PDF).\n");
-
-            String mod = (String) cbModalidad.getSelectedItem();
-            boolean esPractica = "Práctica profesional".equalsIgnoreCase(mod) || "Practica profesional".equalsIgnoreCase(mod);
-            if (esPractica && !dfCarta.hasFile())     sb.append("• Debes adjuntar la Carta de Aceptación (PDF) para Práctica profesional.\n");
-
-            if (sb.length()>0){
-                JOptionPane.showMessageDialog(this, sb.toString(), "Campos obligatorios", JOptionPane.WARNING_MESSAGE);
-                return false;
-            }
-            return true;
-        }
-        private static boolean isEmpty(String s){ return s==null || s.trim().isEmpty(); }
-
-        // ====== helpers UI ======
-        private static JTextField text(String placeholder){
-            JTextField tf = new JTextField();
-            tf.putClientProperty("JTextField.placeholderText", placeholder);
-            tf.setFont(F_BODY);
-            tf.setBorder(javax.swing.BorderFactory.createCompoundBorder(
-                    new javax.swing.border.LineBorder(C_BORDE_SUAVE,1,true),
-                    new EmptyBorder(8,10,8,10)));
-            return tf;
-        }
-        private static JTextArea area(String ph){
-            JTextArea ta = new JTextArea(3, 20);
-            ta.setLineWrap(true);
-            ta.setWrapStyleWord(true);
-            ta.setFont(F_BODY);
-            ta.setBorder(new EmptyBorder(6,6,6,6));
-            ta.putClientProperty("JTextArea.placeholderText", ph);
-            return ta;
-        }
-        private static JScrollPane taScroll(JTextArea ta){
-            JScrollPane sp = new JScrollPane(ta);
-            sp.setBorder(javax.swing.BorderFactory.createCompoundBorder(
-                    new javax.swing.border.LineBorder(C_BORDE_SUAVE,1,true),
-                    new EmptyBorder(4,6,4,6)));
-            sp.getViewport().setBackground(Color.WHITE);
-            return sp;
-        }
-        private static void label(JPanel form, GridBagConstraints c, int x, int y, String text){
-            GridBagConstraints l = (GridBagConstraints) c.clone();
-            l.gridx = x; l.gridy = y; l.weightx = 0.0;
-            JLabel jl = new JLabel(text);
-            jl.setFont(F_H3);
-            form.add(jl, l);
-        }
-        private static void field(JPanel form, GridBagConstraints c, int x, int y, Component comp){
-            GridBagConstraints f = (GridBagConstraints) c.clone();
-            f.gridx = x; f.gridy = y; f.weightx = 1.0;
-            form.add(comp, f);
-        }
-        private static void addPair(JPanel form, GridBagConstraints c, int y,
-                                    String l1, Component f1, String l2, Component f2){
-            label(form,c,0,y,l1); field(form,c,1,y,f1);
-            label(form,c,2,y,l2); field(form,c,3,y,f2);
-        }
-        private static void addFull(JPanel form, GridBagConstraints c, int y, String l, Component comp){
-            label(form,c,0,y,l);
-            GridBagConstraints f = (GridBagConstraints) c.clone();
-            f.gridx=1; f.gridy=y; f.gridwidth=3; f.weightx=1.0;
-            form.add(comp, f);
-        }
-
-        // Habilita/inhabilita carta según modalidad
-        private void actualizarCarta(){
-            String mod = (String) cbModalidad.getSelectedItem();
-            boolean enable = "Práctica profesional".equalsIgnoreCase(mod) || "Practica profesional".equalsIgnoreCase(mod);
-            dfCarta.setEnabled(enable);
-            revalidate(); repaint();
-        }
-
-        // API pública
-        void setOnSubmitValid(Runnable r){ this.onSubmitValid = (r!=null)? r : new Runnable(){ public void run(){} }; }
-        void setOnCancel(Runnable r){ this.onCancel = (r!=null)? r : new Runnable(){ public void run(){} }; }
-
-        void reset(){
-            tfTitulo.setText(""); cbModalidad.setSelectedIndex(0); dpFecha.clear();
-            tfDirId.setText(""); tfCoDirNom.setText("");
-            taObjGeneral.setText(""); taObjEspecificos.setText("");
-            dfFormatoA.clear(); dfCarta.clear();
-            actualizarCarta();
-        }
-
-        // Getters (por si los necesitas luego)
-        java.io.File getFormatoA(){ return dfFormatoA.getFile(); }
-        java.io.File getCartaEmpresa(){ return dfCarta.getFile(); }
-        String getModalidad(){ return (String) cbModalidad.getSelectedItem(); }
-        String getFecha(){ return dpFecha.getDateString(); }
+        actualizarCarta();
+        cbModalidad.addActionListener(e -> actualizarCarta());
     }
+
+    // ====== VALIDACIÓN ======
+    private boolean validar(){
+        StringBuilder sb = new StringBuilder();
+        if (isEmpty(tfTitulo.getText()))          sb.append("• Título del proyecto es obligatorio.\n");
+
+        Modalidad m = (Modalidad) cbModalidad.getSelectedItem();
+        if (m == null || m == Modalidad.SELECCION) sb.append("• Selecciona una modalidad válida.\n");
+
+        if (isEmpty(dpFecha.getDateString()))     sb.append("• Fecha actual es obligatoria.\n");
+        if (isEmpty(tfDirId.getText()))           sb.append("• Identificación de director es obligatoria.\n");
+        if (isEmpty(tfCoDirNom.getText()))        sb.append("• Codirector del proyecto es obligatorio.\n");
+        if (isEmpty(taObjGeneral.getText()))      sb.append("• Objetivo General es obligatorio.\n");
+        if (isEmpty(taObjEspecificos.getText()))  sb.append("• Objetivos Específicos son obligatorios.\n");
+        if (!dfFormatoA.hasFile())                sb.append("• Debes adjuntar el Formato A (PDF).\n");
+
+        // Requisito específico
+        if (m == Modalidad.PRACTICA && !dfCarta.hasFile()) {
+            sb.append("• Debes adjuntar la Carta de Aceptación (PDF) para Práctica profesional.\n");
+        }
+
+        if (sb.length() > 0){
+            JOptionPane.showMessageDialog(this, sb.toString(), "Campos obligatorios", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        return true;
+    }
+    private static boolean isEmpty(String s){ return s==null || s.trim().isEmpty(); }
+
+    // ====== helpers UI ======
+    private static JTextField text(String placeholder){
+        JTextField tf = new JTextField();
+        tf.putClientProperty("JTextField.placeholderText", placeholder);
+        tf.setFont(F_BODY);
+        tf.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+                new javax.swing.border.LineBorder(C_BORDE_SUAVE,1,true),
+                new EmptyBorder(8,10,8,10)));
+        return tf;
+    }
+    private static JTextArea area(String ph){
+        JTextArea ta = new JTextArea(3, 20);
+        ta.setLineWrap(true);
+        ta.setWrapStyleWord(true);
+        ta.setFont(F_BODY);
+        ta.setBorder(new EmptyBorder(6,6,6,6));
+        ta.putClientProperty("JTextArea.placeholderText", ph);
+        return ta;
+    }
+    private static JScrollPane taScroll(JTextArea ta){
+        JScrollPane sp = new JScrollPane(ta);
+        sp.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+                new javax.swing.border.LineBorder(C_BORDE_SUAVE,1,true),
+                new EmptyBorder(4,6,4,6)));
+        sp.getViewport().setBackground(Color.WHITE);
+        return sp;
+    }
+    private static void label(JPanel form, GridBagConstraints c, int x, int y, String text){
+        GridBagConstraints l = (GridBagConstraints) c.clone();
+        l.gridx = x; l.gridy = y; l.weightx = 0.0;
+        JLabel jl = new JLabel(text);
+        jl.setFont(F_H3);
+        form.add(jl, l);
+    }
+    private static void field(JPanel form, GridBagConstraints c, int x, int y, Component comp){
+        GridBagConstraints f = (GridBagConstraints) c.clone();
+        f.gridx = x; f.gridy = y; f.weightx = 1.0;
+        form.add(comp, f);
+    }
+    private static void addPair(JPanel form, GridBagConstraints c, int y,
+                                String l1, Component f1, String l2, Component f2){
+        label(form,c,0,y,l1); field(form,c,1,y,f1);
+        label(form,c,2,y,l2); field(form,c,3,y,f2);
+    }
+    private static void addFull(JPanel form, GridBagConstraints c, int y, String l, Component comp){
+        label(form,c,0,y,l);
+        GridBagConstraints f = (GridBagConstraints) c.clone();
+        f.gridx=1; f.gridy=y; f.gridwidth=3; f.weightx=1.0;
+        form.add(comp, f);
+    }
+
+    // Habilita/inhabilita carta según modalidad y actualiza texto
+    private void actualizarCarta(){
+        Modalidad m = (Modalidad) cbModalidad.getSelectedItem();
+        boolean requireCarta = (m == Modalidad.PRACTICA);
+
+        dfCarta.setEnabled(requireCarta);
+        if (requireCarta) {
+            dfCarta.setLine1("✎  Arrastre el archivo aquí o haga clic para seleccionar (REQUERIDO)");
+            dfCarta.setLine2("Solo un archivo PDF - Obligatorio para Práctica profesional");
+        } else {
+            dfCarta.setLine1("✎  Arrastre el archivo aquí o haga clic para seleccionar");
+            dfCarta.setLine2("Solo un archivo PDF - Opcional para esta modalidad");
+        }
+
+        revalidate();
+        repaint();
+    }
+
+    // API pública
+    void setOnSubmitValid(Runnable r){ this.onSubmitValid = (r!=null)? r : new Runnable(){ public void run(){} }; }
+    void setOnCancel(Runnable r){ this.onCancel = (r!=null)? r : new Runnable(){ public void run(){} }; }
+
+    void reset(){
+        tfTitulo.setText(""); cbModalidad.setSelectedItem(Modalidad.SELECCION); dpFecha.clear();
+        tfDirId.setText(""); tfCoDirNom.setText("");
+        taObjGeneral.setText(""); taObjEspecificos.setText("");
+        dfFormatoA.clear(); dfCarta.clear();
+        actualizarCarta();
+    }
+
+    // Getters
+    java.io.File getFormatoA(){ return dfFormatoA.getFile(); }
+    java.io.File getCartaEmpresa(){ return dfCarta.getFile(); }
+    String getModalidad(){
+        Modalidad m = (Modalidad) cbModalidad.getSelectedItem();
+        return m == null ? "" : m.label;
+    }
+    String getFecha(){ return dpFecha.getDateString(); }
+}
+
 
     // ========================= Capa Modal (GlassPane) =========================
     private class ModalLayer extends JComponent {
@@ -819,17 +935,14 @@ public class DocenteView extends JFrame {
         }
 
         // dentro de cerrar()
-    void cerrar(){
-   
-    javax.swing.JPopupMenu.setDefaultLightWeightPopupEnabled(true);
-
-    setVisible(false);
-    removeAll();
-    revalidate();
-    repaint();
-    afterClose.run();
-}
-
+        void cerrar(){
+            javax.swing.JPopupMenu.setDefaultLightWeightPopupEnabled(true);
+            setVisible(false);
+            removeAll();
+            revalidate();
+            repaint();
+            afterClose.run();
+        }
     }
 
     // ====== DatePickerField: campo con botón 📅 y popup con Spinner ======
@@ -899,6 +1012,49 @@ public class DocenteView extends JFrame {
     }
 
     
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">                          
+    private void initComponents() {
+
+        jPanel1 = new javax.swing.JPanel();
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 679, Short.MAX_VALUE)
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 481, Short.MAX_VALUE)
+        );
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+        );
+
+        pack();
+    }// </editor-fold>                        
+
+
+    // Variables declaration - do not modify                     
+    private javax.swing.JPanel jPanel1;
+    // End of variables declaration                   
+
+    // ================= MAIN para probar la vista =================
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new DocenteView().setVisible(true));
+    }
+}
+    
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
@@ -935,12 +1091,3 @@ public class DocenteView extends JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel jPanel1;
     // End of variables declaration//GEN-END:variables
-  // ---------- MAIN para probar la vista ----------
-
-
-
- // ================= MAIN para probar la vista =================
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new DocenteView().setVisible(true));
-    }
-}
