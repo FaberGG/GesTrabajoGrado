@@ -85,6 +85,7 @@ public class Main {
                 archivoService,
                 userRepository
         );
+        IUserService userService = new UserService(userRepository);
 
         // 5. Configurar ServiceLocator con todas las dependencias
         ServiceLocator.getInstance().configure(
@@ -93,6 +94,7 @@ public class Main {
                 formatoARepository,
                 autenticacionService,
                 proyectoGradoService,
+                userService,
                 archivoService
         );
 

@@ -2,6 +2,7 @@ package co.unicauca.gestiontrabajogrado.controller;
 
 import co.unicauca.gestiontrabajogrado.domain.model.User;
 import co.unicauca.gestiontrabajogrado.domain.service.IProyectoGradoService;
+import co.unicauca.gestiontrabajogrado.domain.service.IUserService;
 import co.unicauca.gestiontrabajogrado.domain.service.ServiceLocator;
 import co.unicauca.gestiontrabajogrado.dto.ProyectoGradoResponseDTO;
 import co.unicauca.gestiontrabajogrado.presentation.dashboard.estudianteview.EstudianteView;
@@ -12,13 +13,21 @@ public class EstudianteController {
     private EstudianteView view;
     private User currentUser;
     private IProyectoGradoService proyectoGradoService;
+    private IUserService userService;
     private ProyectoGradoResponseDTO proyectoActual;
 
     public EstudianteController(EstudianteView view, User user) {
         this.view = view;
         this.currentUser = user;
-        //Inyectar el servicio a través de dependency injection
-        this.proyectoGradoService = ServiceLocator.getInstance().getProyectoGradoService();
+        try {
+            ServiceLocator locator = ServiceLocator.getInstance();
+            this.proyectoGradoService = locator.getProyectoGradoService();
+            this.userService = locator.getUserService();
+
+            System.out.println("DEBUG: Servicios obtenidos correctamente del ServiceLocator");
+        } catch (Exception e) {
+            System.err.println("DEBUG: Error obteniendo servicios del ServiceLocator: " + e.getMessage());
+        }
     }
 
     public void cargarDatosTrabajoGrado() {
@@ -67,22 +76,34 @@ public class EstudianteController {
 
     // Métodos para obtener información del director/codirector
     public String obtenerNombreDirector() {
-        // TODO: Implementar servicio para obtener datos del director
-        return "Dr. Juan Pérez";
+        if (userService != null) {
+            return userService.obtenerNombreCompleto(proyectoActual.directorId);
+        }
+        return "No asignado";
     }
 
     public String obtenerNombreCodirector() {
-        if (proyectoActual != null && proyectoActual.codirectorId != null) {
-            // TODO: Implementar servicio para obtener datos del codirector
-            return "Dra. María García"; // Simulado
+        if (userService != null) {
+            return userService.obtenerNombreCompleto(proyectoActual.codirectorId);
         }
         return "No asignado";
     }
 
     public String obtenerNombreEstudiante2() {
-        if (proyectoActual != null && proyectoActual.estudiante2Id != null) {
-            // TODO: Implementar servicio para obtener datos del estudiante 2
-            return "Ana López";
+        if (proyectoActual == null) {
+            return null;
+        }
+
+        // Determinar quién es el "otro" estudiante
+        Integer otroEstudianteId = determinarOtroEstudiante();
+
+        if (otroEstudianteId == null) {
+            return null; // Es un proyecto individual
+        }
+
+        if (userService != null) {
+            String nombreCompleto = userService.obtenerNombreCompleto(otroEstudianteId);
+            return "Usuario no encontrado".equals(nombreCompleto) ? null : nombreCompleto;
         }
         return null;
     }
@@ -104,6 +125,19 @@ public class EstudianteController {
                 return "Estado desconocido";
         }
     }
+
+    private Integer determinarOtroEstudiante() {
+        if (proyectoActual.estudiante1Id != null && proyectoActual.estudiante2Id != null) {
+            // Hay dos estudiantes, determinar cuál no es el usuario actual
+            if (proyectoActual.estudiante1Id.equals(currentUser.getId())) {
+                return proyectoActual.estudiante2Id;
+            } else if (proyectoActual.estudiante2Id.equals(currentUser.getId())) {
+                return proyectoActual.estudiante1Id;
+            }
+        }
+        return null; // Proyecto individual o casos edge
+    }
+
 
     private String getEstadoDetallado() {
         if (proyectoActual.numeroIntentos == 1) {

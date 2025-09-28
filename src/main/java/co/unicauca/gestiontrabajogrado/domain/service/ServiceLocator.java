@@ -13,6 +13,7 @@ public class ServiceLocator {
     // Servicios
     private IAutenticacionService autenticacionService;
     private IProyectoGradoService proyectoGradoService;
+    private IUserService userService;
     private IArchivoService archivoService;
 
     // Repositorios
@@ -47,6 +48,7 @@ public class ServiceLocator {
                           IFormatoARepository formatoRepo,
                           IAutenticacionService autenticacionServ,
                           IProyectoGradoService proyectoServ,
+                          IUserService userServ,
                           IArchivoService archivoServ) {
 
         // Validar que no se configure más de una vez
@@ -59,6 +61,7 @@ public class ServiceLocator {
         this.formatoARepository = formatoRepo;
         this.autenticacionService = autenticacionServ;
         this.proyectoGradoService = proyectoServ;
+        this.userService = userServ;
         this.archivoService = archivoServ;
     }
 
@@ -74,6 +77,11 @@ public class ServiceLocator {
     public IAutenticacionService getAutenticacionService() {
         validateConfigured();
         return autenticacionService;
+    }
+
+    public IUserService getUserService() {
+        validateConfigured();
+        return userService;
     }
 
     public IProyectoGradoService getProyectoGradoService() {
