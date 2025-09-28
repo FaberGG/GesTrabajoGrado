@@ -219,6 +219,30 @@ public class ProyectoGradoService implements IProyectoGradoService {
         p.setEstado(enumEstadoProyecto.APROBADO);
         proyectoRepo.update(p);
     }
+    @Override
+    public ProyectoGradoResponseDTO obtenerProyectoPorEstudiante(Integer estudianteId) {
+        Objects.requireNonNull(estudianteId, "estudianteId es requerido");
+
+        // Verificar que el usuario existe y es estudiante
+        User estudiante = userRepo.findById(estudianteId)
+                .orElseThrow(() -> new IllegalArgumentException("Estudiante con id " + estudianteId + " no existe"));
+
+        if (estudiante.getRol() != enumRol.ESTUDIANTE) {
+            throw new IllegalArgumentException("El usuario no es ESTUDIANTE");
+        }
+
+        // Buscar el proyecto donde el estudiante participa (como estudiante1 o estudiante2)
+        List<ProyectoGrado> proyectos = proyectoRepo.findByEstudianteId(estudianteId);
+
+        if (proyectos.isEmpty()) {
+            return null; // o lanzar excepción según tus necesidades de negocio
+        }
+
+        // Un estudiante debería tener solo un proyecto activo, tomamos el primero
+        ProyectoGrado proyecto = proyectos.get(0);
+
+        return toDto(proyecto);
+    }
 
     // ---- Mapper ----
     private ProyectoGradoResponseDTO toDto(ProyectoGrado p) {

@@ -1,12 +1,13 @@
 package co.unicauca.gestiontrabajogrado;
 
+import co.unicauca.gestiontrabajogrado.infrastructure.repository.IProyectoGradoRepository;
 import co.unicauca.gestiontrabajogrado.infrastructure.repository.UserRepository;
 import co.unicauca.gestiontrabajogrado.presentation.auth.LoginView;
 import co.unicauca.gestiontrabajogrado.controller.LoginController;
 import co.unicauca.gestiontrabajogrado.domain.service.AutenticacionService;
 import co.unicauca.gestiontrabajogrado.domain.service.IAutenticacionService;
-import co.unicauca.gestiontrabajogrado.infrastructure.repository.IUserRepository;
-import co.unicauca.gestiontrabajogrado.presentation.common.ServiceManager; // NUEVO: Importar ServiceManager
+import co.unicauca.gestiontrabajogrado.infrastructure.repository.*;
+import co.unicauca.gestiontrabajogrado.domain.service.*;
 import co.unicauca.gestiontrabajogrado.util.PasswordHasher;
 import co.unicauca.gestiontrabajogrado.util.EmailPolicy;
 import co.unicauca.gestiontrabajogrado.util.PasswordPolicy;
@@ -62,46 +63,80 @@ public class Main {
     private static void initializeApplication() {
         // 1. Inicializar la base de datos
         DatabaseInitializer.ensureCreated();
-        // 2. Crear las dependencias necesarias
+        // 2. Crear repositorios (usar las implementaciones existentes)
         IUserRepository userRepository = createUserRepository();
+        IProyectoGradoRepository proyectoGradoRepository = createProyectoGradoRepository();
+        IFormatoARepository formatoARepository = createFormatoARepository();
+
+        // 3. Crear servicios auxiliares
         PasswordHasher passwordHasher = new PasswordHasher();
         IEmailPolicy emailPolicy = EmailPolicy.getInstance();
         IPasswordPolicy passwordPolicy = PasswordPolicy.getInstance();
+        IArchivoService archivoService = createArchivoService();
+
+        // 4. Crear servicios principales
         IAutenticacionService autenticacionService = new AutenticacionService(
-            userRepository, passwordHasher, emailPolicy, passwordPolicy
+                userRepository, passwordHasher, emailPolicy, passwordPolicy
         );
 
-        // 2. NUEVO: Configurar ServiceManager con la instancia del servicio
-        // Esto permite que otras partes de la aplicación (como cerrar sesión) accedan al servicio
-        ServiceManager.getInstance().setAutenticacionService(autenticacionService);
+        IProyectoGradoService proyectoGradoService = new ProyectoGradoService(
+                proyectoGradoRepository,
+                formatoARepository,
+                archivoService,
+                userRepository
+        );
 
-        // 3. Crear la vista de login
+        // 5. Configurar ServiceLocator con todas las dependencias
+        ServiceLocator.getInstance().configure(
+                userRepository,
+                proyectoGradoRepository,
+                formatoARepository,
+                autenticacionService,
+                proyectoGradoService,
+                archivoService
+        );
+
+        // 6. Crear y configurar la vista de login
         LoginView loginView = new LoginView();
-
-        // 4. Crear el controller con las dependencias
         LoginController loginController = new LoginController(autenticacionService, loginView);
-
-        // 5. Conectar la vista con el controller
         loginView.setController(loginController);
 
-        // 6. Mostrar la ventana de login
+        // 7. Mostrar la aplicación
         loginView.setVisible(true);
-
-        System.out.println("Aplicación iniciada correctamente");
-        System.out.println("ServiceManager configurado con AutenticacionService");
     }
 
     /**
      * Crea el repositorio de usuarios
-     * NOTA: Necesitas implementar tu repositorio concreto
      */
     private static IUserRepository createUserRepository() {
-        // Opción 1: Si tienes una implementación de base de datos
-        // return new UserRepositoryImpl();
-
-        // Opción 2: Implementación temporal en memoria para desarrollo
+        // Usar tu implementación existente
         return new UserRepository();
     }
+
+    /**
+     * Crea el repositorio de proyectos de grado
+     */
+    private static IProyectoGradoRepository createProyectoGradoRepository() {
+        // Usar tu implementación existente
+        return new ProyectoGradoRepository();
+    }
+
+    /**
+     * Crea el repositorio de formato A
+     */
+    private static IFormatoARepository createFormatoARepository() {
+        // Usar tu implementación existente
+        return new FormatoARepository();
+    }
+
+    /**
+     * Crea el servicio de archivos
+     */
+    private static IArchivoService createArchivoService() {
+        // Usar tu implementación existente o crear una básica
+        return new ArchivoService();
+    }
+
 
     /**
      * Maneja errores durante el inicio de la aplicación
