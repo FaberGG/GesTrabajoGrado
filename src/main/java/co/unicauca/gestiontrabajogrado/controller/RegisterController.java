@@ -24,11 +24,8 @@ public class RegisterController {
     private final RegisterView registerView;
     private final LoginController loginController; // Referencia al controlador de login
 
-
     // Patrón para validar número de celular (opcional, formato colombiano)
-    private static final Pattern PHONE_PATTERN = Pattern.compile(
-            "^[0-9]{10}$"
-    );
+    private static final Pattern PHONE_PATTERN = Pattern.compile("^[0-9]{10}$");
 
     public RegisterController(IAutenticacionService autenticacionService, RegisterView registerView, LoginController loginController) {
         this.autenticacionService = autenticacionService;
@@ -38,13 +35,21 @@ public class RegisterController {
 
     /**
      * Maneja el proceso de registro de usuario
+     * MÉTODO ACTUALIZADO CON IDENTIFICACIÓN
      */
-    public void handleRegister(String nombres, String apellidos, String celular,
+    public void handleRegister(String nombres, String apellidos, String identificacion, String celular,
                                enumProgram programa, enumRol rol, String email,
                                String password, String confirmPassword) {
         try {
             // Validar campos obligatorios
-            validateRequiredFields(nombres, apellidos, programa, rol, email, password, confirmPassword);
+            validateRequiredFields(nombres, apellidos, identificacion, programa, rol, email, password, confirmPassword);
+
+            // Validar formato de identificación
+            validateIdentificacion(identificacion);
+
+            // Validar formato de nombres y apellidos
+            validateNombres(nombres);
+            validateApellidos(apellidos);
 
             // Validar formato de email
             validateEmail(email);
@@ -57,17 +62,33 @@ public class RegisterController {
                 validateCelular(celular);
             }
 
-            // Crear objeto User
+            // Crear objeto User - AJUSTAR SEGÚN TU MODELO
+            // Si tu clase User no tiene campo identificacion, usar el constructor original
             User newUser = new User(
                     null, // ID será asignado por la base de datos
-                    nombres,
-                    apellidos,
-                    celular.isEmpty() ? null : celular,
+                    nombres.trim(),
+                    apellidos.trim(),
+                    celular == null || celular.trim().isEmpty() ? null : celular.trim(),
                     programa,
                     rol,
-                    email,
+                    email.trim().toLowerCase(),
                     null // passwordHash será generado por el servicio
             );
+            
+            // Si tu User tiene identificación, usar este constructor en su lugar:
+            /*
+            User newUser = new User(
+                    null, // ID
+                    nombres.trim(),
+                    apellidos.trim(),
+                    identificacion.trim(), // Nuevo campo
+                    celular == null || celular.trim().isEmpty() ? null : celular.trim(),
+                    programa,
+                    rol,
+                    email.trim().toLowerCase(),
+                    null // passwordHash
+            );
+            */
 
             // Registrar usuario usando el servicio
             User registeredUser = autenticacionService.register(newUser, password);
@@ -94,15 +115,21 @@ public class RegisterController {
 
     /**
      * Valida que todos los campos obligatorios estén completos
+     * MÉTODO ACTUALIZADO CON IDENTIFICACIÓN
      */
-    private void validateRequiredFields(String nombres, String apellidos, enumProgram programa,
-                                        enumRol rol, String email, String password, String confirmPassword) {
+    private void validateRequiredFields(String nombres, String apellidos, String identificacion, 
+                                        enumProgram programa, enumRol rol, String email, 
+                                        String password, String confirmPassword) {
         if (nombres == null || nombres.trim().isEmpty()) {
             throw new IllegalArgumentException("El campo 'Nombres' es obligatorio.");
         }
 
         if (apellidos == null || apellidos.trim().isEmpty()) {
             throw new IllegalArgumentException("El campo 'Apellidos' es obligatorio.");
+        }
+
+        if (identificacion == null || identificacion.trim().isEmpty()) {
+            throw new IllegalArgumentException("El campo 'Identificación' es obligatorio.");
         }
 
         if (programa == null) {
@@ -121,8 +148,24 @@ public class RegisterController {
             throw new IllegalArgumentException("El campo 'Contraseña' es obligatorio.");
         }
 
-        if (confirmPassword == null || confirmPassword.isEmpty()) {
-            throw new IllegalArgumentException("Debe confirmar su contraseña.");
+        // Confirmar contraseña solo si se proporciona
+        if (confirmPassword != null && !confirmPassword.isEmpty() && !password.equals(confirmPassword)) {
+            throw new IllegalArgumentException("Las contraseñas no coinciden.");
+        }
+    }
+
+    /**
+     * NUEVO MÉTODO: Valida el formato de la identificación
+     */
+    private void validateIdentificacion(String identificacion) {
+        // Validar que solo contenga números
+        if (!identificacion.matches("^[0-9]+$")) {
+            throw new IllegalArgumentException("La identificación solo puede contener números.");
+        }
+        
+        // Validar longitud (ajustar según tus reglas de negocio)
+        if (identificacion.length() < 6 || identificacion.length() > 15) {
+            throw new IllegalArgumentException("La identificación debe tener entre 6 y 15 dígitos.");
         }
     }
 
@@ -131,7 +174,7 @@ public class RegisterController {
      */
     private void validateEmail(String email) {
         EmailPolicy emailPolicy = EmailPolicy.getInstance();
-        if (emailPolicy.isInstitutional(email)) {
+        if (!emailPolicy.isInstitutional(email)) {
             throw new IllegalArgumentException("Debe usar un email institucional válido (@unicauca.edu.co).");
         }
     }
@@ -144,6 +187,11 @@ public class RegisterController {
         if (!passwordPolicy.isValid(password)) {
             throw new IllegalArgumentException("La contraseña debe tener al menos 6 caracteres, " +
                     "al menos una mayúscula, un número y un caracter especial.");
+        }
+        
+        // Solo validar coincidencia si se proporciona confirmPassword
+        if (confirmPassword != null && !confirmPassword.isEmpty() && !password.equals(confirmPassword)) {
+            throw new IllegalArgumentException("Las contraseñas no coinciden.");
         }
     }
 
@@ -305,66 +353,10 @@ public class RegisterController {
 
     /**
      * Valida que el rol seleccionado sea apropiado según el email
-     * Por ejemplo, emails de estudiante podrían tener restricciones
      */
     private void validateRolByEmail(String email, enumRol rol) {
-        // Esta validación es opcional y depende de las reglas de negocio
         if (email.contains("estudiante") && rol == enumRol.DOCENTE) {
             throw new IllegalArgumentException("No puedes registrarte como docente con un email de estudiante.");
-        }
-    }
-
-    /**
-     * Método mejorado de handleRegister con validaciones adicionales
-     */
-    public void handleRegisterWithExtraValidations(String nombres, String apellidos, String celular,
-                                                   enumProgram programa, enumRol rol, String email,
-                                                   String password, String confirmPassword) {
-        try {
-            // Validaciones básicas
-            validateRequiredFields(nombres, apellidos, programa, rol, email, password, confirmPassword);
-
-            // Validaciones adicionales de formato
-            validateNombres(nombres);
-            validateApellidos(apellidos);
-            validateEmailDomain(email);
-            validatePassword(password, confirmPassword);
-            validateRolByEmail(email, rol);
-
-            // Validar celular si se proporciona
-            if (celular != null && !celular.isEmpty()) {
-                validateCelular(celular);
-            }
-
-            // Crear objeto User
-            User newUser = new User(
-                    null,
-                    nombres.trim(),
-                    apellidos.trim(),
-                    celular == null || celular.trim().isEmpty() ? null : celular.trim(),
-                    programa,
-                    rol,
-                    email.trim().toLowerCase(),
-                    null
-            );
-
-            // Registrar usuario
-            User registeredUser = autenticacionService.register(newUser, password);
-
-            // Mostrar mensaje de éxito
-            showSuccess("¡Registro exitoso!\n" +
-                    "Bienvenido, " + registeredUser.getNombres() + " " + registeredUser.getApellidos() + ".\n" +
-                    "Ya puedes iniciar sesión con tu cuenta.");
-
-            // Redirigir al login
-            redirectToLogin();
-
-        } catch (IllegalArgumentException e) {
-            showError("Error de validación: " + e.getMessage());
-        } catch (Exception e) {
-            showError("Ha ocurrido un error durante el registro. Por favor, intenta nuevamente.");
-            System.err.println("Error en registro: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 
@@ -380,25 +372,4 @@ public class RegisterController {
     private void showWarning(String message) {
         JOptionPane.showMessageDialog(registerView, message, "Advertencia", JOptionPane.WARNING_MESSAGE);
     }
-
-    /**
-     * Método para validar disponibilidad de email (requiere implementación en el servicio)
-     */
-    private void validateEmailAvailability(String email) {
-        // Esta funcionalidad requeriría un método adicional en IAutenticacionService
-        // como: boolean isEmailAvailable(String email)
-
-        // Por ahora se deja como comentario para implementación futura
-        /*
-        try {
-            if (!autenticacionService.isEmailAvailable(email)) {
-                throw new IllegalArgumentException("Este email ya está registrado en el sistema.");
-            }
-        } catch (Exception e) {
-            System.err.println("Error al validar disponibilidad de email: " + e.getMessage());
-            // En caso de error en la validación, permitir continuar
-        }
-        */
-    }
 }
-// No se requiere cambio, cumple SRP y DIP.

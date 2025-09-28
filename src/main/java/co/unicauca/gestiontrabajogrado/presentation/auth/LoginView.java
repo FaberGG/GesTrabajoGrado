@@ -2,8 +2,6 @@ package co.unicauca.gestiontrabajogrado.presentation.auth;
 
 import co.unicauca.gestiontrabajogrado.controller.LoginController;
 import co.unicauca.gestiontrabajogrado.presentation.common.UIConstants;
-import co.unicauca.gestiontrabajogrado.presentation.common.HeaderPanel;
-
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -12,9 +10,11 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.geom.RoundRectangle2D;
 
 /**
- * Formulario de inicio de sesión para el sistema de gestión de trabajo de grado
+ * Formulario de inicio de sesión moderno para el sistema de gestión de trabajo de grado
+ * Rediseñado con estilo contemporáneo similar al mockup
  * @author Lyz
  */
 public class LoginView extends JFrame {
@@ -22,12 +22,15 @@ public class LoginView extends JFrame {
     private JTextField emailField;
     private JPasswordField passwordField;
     private JButton loginButton;
-    private JLabel registrarseLabel;
-    private JCheckBox rememberMeCheckBox;
+    private JLabel forgotPasswordLabel;
+    private JButton registerTabButton;
+    private JButton loginTabButton;
     private LoginController controller;
+    
+    // Ya no necesitamos las variables de fuentes personalizadas
 
     public LoginView() {
-        super("Iniciar Sesión - Gestión del Proceso de Trabajo de Grado");
+        super("Universidad del Cauca - Gestión del Proceso de Trabajo de Grado");
         initializeFrame();
         createComponents();
         setupLayout();
@@ -35,146 +38,329 @@ public class LoginView extends JFrame {
         loadRememberedData();
     }
 
-    /**
-     * Constructor que recibe el controller (inyección de dependencia)
-     * @param controller Controlador para manejar la lógica de login
-     */
     public LoginView(LoginController controller) {
         this();
         this.controller = controller;
         loadRememberedData();
     }
 
-    /**
-     * Establece el controller después de la construcción
-     * @param controller Controlador para manejar la lógica de login
-     */
     public void setController(LoginController controller) {
         this.controller = controller;
         loadRememberedData();
     }
+    
+    /**
+     * Crear fuente para "Universidad del Cauca" (estilo inteligente como RegisterView)
+     */
+    private Font createUniversityFont(int style, int size) {
+        String[] fontNames = {
+            "Kaisei Opti",      // Fuente preferida
+            "Times New Roman",  // Alternativa serif elegante
+            "Georgia",          // Otra alternativa serif
+            "Serif"             // Fallback genérico
+        };
+        
+        for (String fontName : fontNames) {
+            Font font = new Font(fontName, style, size);
+            // Verificar si la fuente existe comparando con la fuente por defecto
+            if (!font.getFamily().equals(Font.DIALOG)) {
+                System.out.println("✓ Universidad del Cauca usando fuente: " + fontName);
+                return font;
+            }
+        }
+        
+        System.out.println("⚠ Universidad del Cauca usando fuente por defecto: SansSerif");
+        return new Font("SansSerif", style, size);
+    }
+
+    /**
+     * Crear fuente para "Ingresar a la Plataforma" (estilo inteligente como RegisterView)
+     */
+    private Font createTitleFont(int style, int size) {
+        String[] fontNames = {
+            "Antonio",          // Fuente preferida
+            "Impact",           // Alternativa condensada moderna
+            "Arial Black",      // Alternativa bold
+            "SansSerif"         // Fallback genérico
+        };
+        
+        for (String fontName : fontNames) {
+            Font font = new Font(fontName, style, size);
+            // Verificar si la fuente existe comparando con la fuente por defecto
+            if (!font.getFamily().equals(Font.DIALOG)) {
+                System.out.println("✓ Título usando fuente: " + fontName);
+                return font;
+            }
+        }
+        
+        System.out.println("⚠ Título usando fuente por defecto: SansSerif");
+        return new Font("SansSerif", style, size);
+    }
 
     private void initializeFrame() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setMinimumSize(new Dimension(1100, 700));
+        setSize(800, 600);
+        setMinimumSize(new Dimension(800, 600));
         setLocationRelativeTo(null);
         setResizable(false);
+        
+        // Fondo con degradado azul
+        setContentPane(new BackgroundPanel());
     }
 
     private void createComponents() {
-        // Campo de email con ancho consistente
-        emailField = new JTextField();
-        emailField.setFont(UIConstants.BODY);
-        emailField.setBackground(UIConstants.CARD_BG);
-        emailField.setForeground(UIConstants.TEXT_PRIMARY);
-        emailField.setBorder(createRoundedBorder(new Color(0xCED4DA), false));
-        emailField.setPreferredSize(new Dimension(350, 40));
-        emailField.setMaximumSize(new Dimension(350, 40));
+        // Tabs para Registrarse / Iniciar sesión
+        registerTabButton = createTabButton("Registrarse", false);
+        loginTabButton = createTabButton("Iniciar sesión", true);
 
-        // Campo de contraseña con ancho consistente
-        passwordField = new JPasswordField();
-        passwordField.setFont(UIConstants.BODY);
-        passwordField.setBackground(UIConstants.CARD_BG);
-        passwordField.setForeground(UIConstants.TEXT_PRIMARY);
-        passwordField.setBorder(createRoundedBorder(new Color(0xCED4DA), false));
-        passwordField.setPreferredSize(new Dimension(350, 40));
-        passwordField.setMaximumSize(new Dimension(350, 40));
+        // Campo de email
+        emailField = createStyledTextField("E-mail");
 
-        // Botón de inicio de sesión con sombra y ancho consistente
-        loginButton = new JButton("Iniciar Sesión") {
+        // Campo de contraseña con icono de ojo
+        passwordField = createStyledPasswordField("Password");
+
+        // Enlace "¿Has olvidado tu contraseña?"
+        forgotPasswordLabel = new JLabel("¿Has olvidado tu contraseña?");
+        forgotPasswordLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        forgotPasswordLabel.setForeground(new Color(0x4A90E2));
+        forgotPasswordLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // Botón "Iniciar Sesión"
+        loginButton = createModernButton("Iniciar Sesión");
+    }
+
+    private JButton createTabButton(String text, boolean selected) {
+        JButton button = new JButton(text) {
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-                // Sombra del botón
-                g2.setColor(new Color(0, 0, 0, 15));
-                g2.fillRoundRect(1, 2, getWidth() - 1, getHeight() - 1, 8, 8);
+                // Fondo del tab: si el botón está presionado o está marcado como seleccionado
+                if (getModel().isPressed() || selected) {
+                    g2.setColor(new Color(0xD52E2E)); // rojo
+                } else {
+                    g2.setColor(new Color(0x4A90E2)); // azul
+                }
 
-                // Fondo del botón
-                g2.setColor(getBackground());
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
+                // Línea inferior solo cuando este botón está seleccionado
+                if (selected) {
+                    g2.fillRect(0, getHeight() - 3, getWidth(), 3);
+                }
+
                 super.paintComponent(g);
                 g2.dispose();
             }
         };
-        loginButton.setFont(new Font("SansSerif", Font.BOLD, 16));
-        loginButton.setBackground(UIConstants.BLUE_MAIN);
-        loginButton.setForeground(Color.WHITE);
-        loginButton.setBorder(BorderFactory.createEmptyBorder(12, 30, 12, 30));
-        loginButton.setFocusPainted(false);
-        loginButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        loginButton.setContentAreaFilled(false);
-        loginButton.setOpaque(true);
-        loginButton.setPreferredSize(new Dimension(350, 45));
-        loginButton.setMaximumSize(new Dimension(350, 45));
 
-        // Checkbox "Recordarme"
-        rememberMeCheckBox = new JCheckBox("Recordarme");
-        rememberMeCheckBox.setFont(UIConstants.SMALL);
-        rememberMeCheckBox.setBackground(UIConstants.CARD_BG);
-        rememberMeCheckBox.setForeground(UIConstants.TEXT_PRIMARY);
+        button.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        button.setBorderPainted(false);
+        button.setContentAreaFilled(false);
+        button.setFocusPainted(false);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        // Enlace "Resgistrarse"
-        registrarseLabel = new JLabel("<html><u>¿Registrarse?</u></html>");
-        registrarseLabel.setFont(UIConstants.SMALL);
-        registrarseLabel.setForeground(UIConstants.BLUE_MAIN);
-        registrarseLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        // Color del texto según si está seleccionado
+        if (selected) {
+            button.setForeground(new Color(0x1A2E5A));
+            button.setFont(button.getFont().deriveFont(Font.BOLD));
+        } else {
+            button.setForeground(new Color(0x4A90E2));
+        }
+
+        return button;
     }
 
-    // Método para crear bordes redondeados con sombra interna sutil
-    private javax.swing.border.Border createRoundedBorder(Color borderColor, boolean focused) {
-        return new javax.swing.border.AbstractBorder() {
+    private JTextField createStyledTextField(String placeholder) {
+        JTextField field = new JTextField() {
             @Override
-            public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
+            protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-                // Sombra interna muy sutil
-                if (!focused) {
-                    g2.setColor(new Color(0, 0, 0, 3));
-                    g2.drawRoundRect(x + 1, y + 1, width - 3, height - 3, 7, 7);
+                
+                // Fondo redondeado con borde gris
+                g2.setColor(new Color(0x9F9898)); // Borde gris más claro
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
+                
+                // Fondo interior blanco
+                g2.setColor(getBackground());
+                g2.fillRoundRect(2, 2, getWidth() - 4, getHeight() - 4, 6, 6);
+                
+                super.paintComponent(g);
+                
+                // Placeholder text
+                if (getText().isEmpty() && !hasFocus()) {
+                    g2.setColor(new Color(0xCCCCCC));
+                    g2.setFont(getFont());
+                    FontMetrics fm = g2.getFontMetrics();
+                    int x = getInsets().left;
+                    int y = (getHeight() + fm.getAscent() - fm.getDescent()) / 2;
+                    g2.drawString(placeholder, x, y);
                 }
-
-                // Borde principal
-                g2.setColor(focused ? UIConstants.BLUE_MAIN : borderColor);
-                g2.setStroke(new BasicStroke(focused ? 2.0f : 1.0f));
-                g2.drawRoundRect(x, y, width - 1, height - 1, 8, 8);
                 g2.dispose();
             }
+        };
+        
+        field.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        field.setBackground(Color.WHITE);
+        field.setForeground(Color.BLACK);
+        field.setBorder(new EmptyBorder(12, 16, 12, 16));
+        field.setPreferredSize(new Dimension(280, 45));
+        
+        return field;
+    }
 
+    private JPasswordField createStyledPasswordField(String placeholder) {
+        // Crear una clase anónima extendida para agregar los métodos personalizados
+        JPasswordField field = new JPasswordField() {
+            private boolean passwordVisible = false;
+            
             @Override
-            public Insets getBorderInsets(Component c) {
-                return new Insets(10, 15, 10, 15);
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                
+                // Fondo redondeado con borde gris
+                g2.setColor(new Color(0x9F9898)); // Borde gris más claro
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
+                
+                // Fondo interior blanco
+                g2.setColor(getBackground());
+                g2.fillRoundRect(2, 2, getWidth() - 4, getHeight() - 4, 6, 6);
+                
+                super.paintComponent(g);
+                
+                // Placeholder text
+                if (getPassword().length == 0 && !hasFocus()) {
+                    g2.setColor(new Color(0xCCCCCC));
+                    g2.setFont(getFont());
+                    FontMetrics fm = g2.getFontMetrics();
+                    int x = getInsets().left;
+                    int y = (getHeight() + fm.getAscent() - fm.getDescent()) / 2;
+                    g2.drawString(placeholder, x, y);
+                }
+                
+                // Icono de ojo clickeable
+                g2.setColor(new Color(0x666666));
+                g2.setFont(new Font("SansSerif", Font.PLAIN, 16));
+                String eyeIcon = passwordVisible ? "🙈" : "👁"; // Cambiar icono según visibilidad
+                FontMetrics fm = g2.getFontMetrics();
+                int iconX = getWidth() - fm.stringWidth(eyeIcon) - 12;
+                int iconY = (getHeight() + fm.getAscent() - fm.getDescent()) / 2;
+                g2.drawString(eyeIcon, iconX, iconY);
+                
+                g2.dispose();
+            }
+            
+            // Método para alternar visibilidad de la contraseña
+            public void togglePasswordVisibility() {
+                passwordVisible = !passwordVisible;
+                if (passwordVisible) {
+                    setEchoChar((char) 0); // Mostrar caracteres
+                } else {
+                    setEchoChar('•'); // Ocultar caracteres
+                }
+                repaint();
+            }
+            
+            // Método para verificar si el clic fue sobre el icono del ojo
+            public boolean isEyeIconClicked(int x, int y) {
+                FontMetrics fm = getFontMetrics(getFont());
+                String eyeIcon = passwordVisible ? "🙈" : "👁";
+                int iconX = getWidth() - fm.stringWidth(eyeIcon) - 12;
+                int iconWidth = fm.stringWidth(eyeIcon);
+                int iconHeight = fm.getHeight();
+                int iconY = (getHeight() - iconHeight) / 2;
+                
+                return x >= iconX && x <= iconX + iconWidth && 
+                       y >= iconY && y <= iconY + iconHeight;
             }
         };
+        
+        field.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        field.setBackground(Color.WHITE);
+        field.setForeground(Color.BLACK);
+        field.setBorder(new EmptyBorder(12, 16, 12, 40)); // Más padding a la derecha para el icono
+        field.setPreferredSize(new Dimension(280, 45));
+        
+        // Agregar MouseListener para detectar clics en el icono del ojo
+        field.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                // Usar reflexión para acceder a los métodos personalizados
+                JPasswordField source = (JPasswordField) e.getSource();
+                try {
+                    java.lang.reflect.Method isEyeIconClickedMethod = 
+                        source.getClass().getMethod("isEyeIconClicked", int.class, int.class);
+                    java.lang.reflect.Method toggleMethod = 
+                        source.getClass().getMethod("togglePasswordVisibility");
+                    
+                    boolean clicked = (Boolean) isEyeIconClickedMethod.invoke(source, e.getX(), e.getY());
+                    if (clicked) {
+                        toggleMethod.invoke(source);
+                    }
+                } catch (Exception ex) {
+                    // Si falla la reflexión, fallback simple
+                    System.err.println("Error en toggle password: " + ex.getMessage());
+                }
+            }
+        });
+        
+        return field;
+    }
+
+    private JButton createModernButton(String text) {
+        JButton button = new JButton(text) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                
+                // Fondo del botón con degradado
+                GradientPaint gradient = new GradientPaint(
+                    0, 0, new Color(0xE53E3E),
+                    0, getHeight(), new Color(0xC53030)
+                );
+                g2.setPaint(gradient);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 25, 25);
+                
+                // Texto centrado
+                g2.setColor(Color.WHITE);
+                g2.setFont(getFont());
+                FontMetrics fm = g2.getFontMetrics();
+                int textX = (getWidth() - fm.stringWidth(getText())) / 2;
+                int textY = (getHeight() + fm.getAscent() - fm.getDescent()) / 2;
+                g2.drawString(getText(), textX, textY);
+                
+                g2.dispose();
+            }
+        };
+        
+        button.setFont(new Font("SansSerif", Font.BOLD, 14));
+        button.setForeground(Color.WHITE);
+        button.setContentAreaFilled(false);
+        button.setBorderPainted(false);
+        button.setFocusPainted(false);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        button.setPreferredSize(new Dimension(280, 45));
+        
+        return button;
     }
 
     private void setupLayout() {
-        // Root panel
-        JPanel root = new JPanel(new BorderLayout());
-        root.setBackground(UIConstants.BG_APP);
-        setContentPane(root);
-
-        // Header
-        HeaderPanel header = new HeaderPanel();
-        root.add(header, BorderLayout.NORTH);
-
-        // Main content panel
+        setLayout(new BorderLayout());
+        
+        // Panel principal con la tarjeta centrada
         JPanel mainPanel = new JPanel(new GridBagLayout());
-        mainPanel.setBackground(UIConstants.BG_APP);
-        mainPanel.setBorder(new EmptyBorder(50, 50, 50, 50));
-
-        // Login card panel
+        mainPanel.setOpaque(false);
+        
+        // Tarjeta de login
         JPanel loginCard = createLoginCard();
-
+        
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridx = 0;
-        gbc.gridy = 0;
         gbc.anchor = GridBagConstraints.CENTER;
         mainPanel.add(loginCard, gbc);
-
-        root.add(mainPanel, BorderLayout.CENTER);
+        
+        add(mainPanel, BorderLayout.CENTER);
     }
 
     private JPanel createLoginCard() {
@@ -183,198 +369,241 @@ public class LoginView extends JFrame {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-                // Sombra sutil para el card
-                g2.setColor(new Color(0, 0, 0, 8));
-                g2.fillRoundRect(2, 2, getWidth() - 2, getHeight() - 2, 12, 12);
-
-                // Fondo del card
-                g2.setColor(getBackground());
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 12, 12);
+                
+                // Sombra de la tarjeta
+                g2.setColor(new Color(0, 0, 0, 20));
+                g2.fillRoundRect(5, 5, getWidth() - 5, getHeight() - 5, 20, 20);
+                
+                // Fondo blanco de la tarjeta
+                g2.setColor(Color.WHITE);
+                g2.fillRoundRect(0, 0, getWidth() - 5, getHeight() - 5, 20, 20);
+                
                 g2.dispose();
             }
         };
-
-        card.setLayout(new GridBagLayout());
-        card.setBackground(UIConstants.CARD_BG);
-        card.setBorder(BorderFactory.createEmptyBorder(45, 50, 45, 50));
-        card.setPreferredSize(new Dimension(450, 500));
+        
+        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+        card.setBorder(new EmptyBorder(40, 40, 40, 40));
         card.setOpaque(false);
-
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(0, 0, 0, 0);
-        gbc.anchor = GridBagConstraints.CENTER;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-
-        // Panel contenedor para centrar el título
-        JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
-        titlePanel.setBackground(UIConstants.CARD_BG);
-        titlePanel.setOpaque(false);
-
-        JLabel titleLabel = new JLabel("Iniciar Sesión");
-        titleLabel.setFont(UIConstants.H1);
-        titleLabel.setForeground(UIConstants.TEXT_PRIMARY);
-        titlePanel.add(titleLabel);
-
-        gbc.gridx = 0; gbc.gridy = 0;
-        gbc.insets = new Insets(0, 0, 5, 0);
-        card.add(titlePanel, gbc);
-
-        // Panel contenedor para centrar el subtítulo
-        JPanel subtitlePanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
-        subtitlePanel.setBackground(UIConstants.CARD_BG);
-        subtitlePanel.setOpaque(false);
-
-        JLabel subtitleLabel = new JLabel("Ingresa tus credenciales para continuar");
-        subtitleLabel.setFont(UIConstants.BODY);
-        subtitleLabel.setForeground(UIConstants.TEXT_MUTED);
-        subtitlePanel.add(subtitleLabel);
-
-        gbc.gridy = 1;
-        gbc.insets = new Insets(0, 0, 25, 0);
-        card.add(subtitlePanel, gbc);
-
-        // Label para email (alineado a la izquierda)
-        JLabel emailLabel = new JLabel("Correo electrónico");
-        emailLabel.setFont(new Font("SansSerif", Font.BOLD, 13));
-        emailLabel.setForeground(UIConstants.TEXT_PRIMARY);
-
-        gbc.gridy = 2;
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.insets = new Insets(0, 0, 5, 0);
-        card.add(emailLabel, gbc);
-
-        gbc.gridy = 3;
-        gbc.anchor = GridBagConstraints.CENTER;
-        gbc.insets = new Insets(0, 0, 18, 0);
-        card.add(emailField, gbc);
-
-        // Label para contraseña (alineado a la izquierda)
-        JLabel passwordLabel = new JLabel("Contraseña");
-        passwordLabel.setFont(new Font("SansSerif", Font.BOLD, 13));
-        passwordLabel.setForeground(UIConstants.TEXT_PRIMARY);
-
-        gbc.gridy = 4;
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.insets = new Insets(0, 0, 5, 0);
-        card.add(passwordLabel, gbc);
-
-        gbc.gridy = 5;
-        gbc.anchor = GridBagConstraints.CENTER;
-        gbc.insets = new Insets(0, 0, 12, 0);
-        card.add(passwordField, gbc);
-
-        // Panel para recordarme y olvidar contraseña (mejor balanceado)
-        JPanel optionsPanel = new JPanel(new BorderLayout());
-        optionsPanel.setBackground(UIConstants.CARD_BG);
-        optionsPanel.setOpaque(false);
-        optionsPanel.setPreferredSize(new Dimension(350, 25));
-        optionsPanel.add(rememberMeCheckBox, BorderLayout.WEST);
-        optionsPanel.add(registrarseLabel, BorderLayout.EAST);
-
-        gbc.gridy = 6;
-        gbc.insets = new Insets(0, 0, 20, 0);
-        card.add(optionsPanel, gbc);
-
-        gbc.gridy = 7;
-        gbc.insets = new Insets(0, 0, 0, 0);
-        card.add(loginButton, gbc);
-
+        card.setPreferredSize(new Dimension(400, 500));
+        
+        // Logo y título de la Universidad
+        JPanel logoAndTitle = createLogoAndTitleSection();
+        logoAndTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
+        card.add(logoAndTitle);
+        card.add(Box.createVerticalStrut(20));
+        
+        // Título - AQUÍ SE USA LA FUENTE ANTONIO
+        JLabel titleLabel = new JLabel("Ingresar a la Plataforma");
+        titleLabel.setFont(createTitleFont(Font.PLAIN, 30));
+        titleLabel.setForeground(new Color(0x1A2E5A));
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        card.add(titleLabel);
+        card.add(Box.createVerticalStrut(30));
+        
+        // Tabs
+        JPanel tabPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0));
+        tabPanel.setOpaque(false);
+        tabPanel.add(registerTabButton);
+        tabPanel.add(loginTabButton);
+        card.add(tabPanel);
+        card.add(Box.createVerticalStrut(25));
+        
+        // Campos de entrada
+        emailField.setAlignmentX(Component.CENTER_ALIGNMENT);
+        card.add(emailField);
+        card.add(Box.createVerticalStrut(15));
+        
+        passwordField.setAlignmentX(Component.CENTER_ALIGNMENT);
+        card.add(passwordField);
+        card.add(Box.createVerticalStrut(10));
+        
+        // Enlace "¿Has olvidado tu contraseña?"
+        forgotPasswordLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        card.add(forgotPasswordLabel);
+        card.add(Box.createVerticalStrut(25));
+        
+        // Botón de login
+        loginButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        card.add(loginButton);
+        
         return card;
     }
 
+    private JPanel createLogoAndTitleSection() {
+        JPanel logoSection = new JPanel();
+        logoSection.setLayout(new FlowLayout(FlowLayout.CENTER, 0, 0));
+        logoSection.setOpaque(false);
+        
+        // Panel horizontal para logo y título
+        JPanel logoTitlePanel = new JPanel(new BorderLayout(15, 0));
+        logoTitlePanel.setOpaque(false);
+        logoTitlePanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        // Cargar el nuevo logo de la Universidad del Cauca
+        JLabel logoLabel = null;
+        boolean logoLoaded = false;
+        
+        try {
+            java.net.URL logoURL = getClass().getClassLoader().getResource("images/logo.png");
+            
+            if (logoURL != null) {
+                ImageIcon originalIcon = new ImageIcon(logoURL);
+                
+                if (originalIcon.getIconWidth() > 0) {
+                    logoLabel = new JLabel();
+                    
+                    // Redimensionar a tamaño apropiado
+                    int logoSize = 80;
+                    Image scaledImage = originalIcon.getImage()
+                        .getScaledInstance(logoSize, logoSize, Image.SCALE_SMOOTH);
+                    
+                    logoLabel.setIcon(new ImageIcon(scaledImage));
+                    logoLabel.setPreferredSize(new Dimension(logoSize, logoSize));
+                    logoLabel.setMinimumSize(new Dimension(logoSize, logoSize));
+                    logoLabel.setMaximumSize(new Dimension(logoSize, logoSize));
+                    
+                    // Sin fondo para que se vea limpio
+                    logoLabel.setOpaque(false);
+                    
+                    logoLoaded = true;
+                    System.out.println("✓ Nuevo logo de la Universidad del Cauca cargado exitosamente");
+                } else {
+                    throw new Exception("Logo inválido");
+                }
+            } else {
+                throw new Exception("Logo no encontrado");
+            }
+        } catch (Exception e) {
+            System.err.println("Error cargando logo: " + e.getMessage());
+            System.out.println("Usando placeholder...");
+            logoLabel = createPlaceholderLogo();
+        }
+        
+        // Panel para el texto de la universidad - AQUÍ SE USA LA FUENTE KAISEI OPTI
+        JPanel textPanel = new JPanel();
+        textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
+        textPanel.setOpaque(false);
+        
+        JLabel univLabel = new JLabel("Universidad");
+        univLabel.setFont(createUniversityFont(Font.BOLD, 18));
+        univLabel.setForeground(new Color(0x1A2E5A));
+        univLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        
+        JLabel caucaLabel = new JLabel("del Cauca");
+        caucaLabel.setFont(createUniversityFont(Font.BOLD, 18));
+        caucaLabel.setForeground(new Color(0x1A2E5A));
+        caucaLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        
+        textPanel.add(Box.createVerticalGlue());
+        textPanel.add(univLabel);
+        textPanel.add(Box.createVerticalStrut(2));
+        textPanel.add(caucaLabel);
+        textPanel.add(Box.createVerticalGlue());
+        
+        // Ensamblar logo y texto
+        logoTitlePanel.add(logoLabel, BorderLayout.WEST);
+        logoTitlePanel.add(textPanel, BorderLayout.CENTER);
+        
+        logoSection.add(logoTitlePanel);
+        logoSection.setPreferredSize(new Dimension(300, 100));
+        
+        return logoSection;
+    }
+
+    private JLabel createPlaceholderLogo() {
+        JLabel placeholder = new JLabel();
+        placeholder.setPreferredSize(new Dimension(80, 80));
+        placeholder.setMinimumSize(new Dimension(80, 80));
+        placeholder.setMaximumSize(new Dimension(80, 80));
+        placeholder.setOpaque(true);
+        placeholder.setBackground(new Color(0x1A2E5A));
+        placeholder.setForeground(Color.WHITE);
+        placeholder.setFont(new Font("SansSerif", Font.BOLD, 10));
+        placeholder.setText("<html><center>UNICAUCA<br>🎓</center></html>");
+        placeholder.setHorizontalAlignment(SwingConstants.CENTER);
+        placeholder.setVerticalAlignment(SwingConstants.CENTER);
+        placeholder.setBorder(BorderFactory.createLineBorder(new Color(0x1A2E5A), 2));
+        
+        return placeholder;
+    }
+    
     private void setupEventListeners() {
         // Acción del botón de login
-        loginButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                handleLogin();
-            }
-        });
+        loginButton.addActionListener(e -> handleLogin());
 
         // Enter en los campos de texto
-        ActionListener loginAction = new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                handleLogin();
-            }
-        };
-
+        ActionListener loginAction = e -> handleLogin();
         emailField.addActionListener(loginAction);
         passwordField.addActionListener(loginAction);
 
-        // Hover effect para el botón
+        // Hover effects
         loginButton.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
-                loginButton.setBackground(UIConstants.BLUE_DARK);
+                loginButton.repaint(); // El efecto está en el paintComponent
             }
-
+            
             @Override
             public void mouseExited(MouseEvent e) {
-                loginButton.setBackground(UIConstants.BLUE_MAIN);
+                loginButton.repaint();
             }
         });
 
-        // Focus listeners para los campos de texto con efecto hover
-        emailField.addFocusListener(new java.awt.event.FocusAdapter() {
-            public void focusGained(java.awt.event.FocusEvent evt) {
-                emailField.setBorder(createRoundedBorder(UIConstants.BLUE_MAIN, true));
-            }
-            public void focusLost(java.awt.event.FocusEvent evt) {
-                emailField.setBorder(createRoundedBorder(new Color(0xCED4DA), false));
-            }
+        // AQUÍ ESTÁ EL CAMBIO PRINCIPAL - ActionListener para el botón "Registrarse"
+        registerTabButton.addActionListener(e -> {
+            handleRegistrarse();
+            // NO cambiar estados visuales ya que vamos a otra ventana
         });
-
-        passwordField.addFocusListener(new java.awt.event.FocusAdapter() {
-            public void focusGained(java.awt.event.FocusEvent evt) {
-                passwordField.setBorder(createRoundedBorder(UIConstants.BLUE_MAIN, true));
-            }
-            public void focusLost(java.awt.event.FocusEvent evt) {
-                passwordField.setBorder(createRoundedBorder(new Color(0xCED4DA), false));
-            }
+        
+        loginTabButton.addActionListener(e -> {
+            // Mantener en login (ya está seleccionado)
+            updateTabStates(true); // true = login seleccionado
         });
-
-        // Hover effect para los campos de texto
-        emailField.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                if (!emailField.hasFocus()) {
-                    emailField.setBorder(createRoundedBorder(new Color(0xADB5BD), false));
-                }
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-                if (!emailField.hasFocus()) {
-                    emailField.setBorder(createRoundedBorder(new Color(0xCED4DA), false));
-                }
-            }
-        });
-
-        passwordField.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                if (!passwordField.hasFocus()) {
-                    passwordField.setBorder(createRoundedBorder(new Color(0xADB5BD), false));
-                }
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-                if (!passwordField.hasFocus()) {
-                    passwordField.setBorder(createRoundedBorder(new Color(0xCED4DA), false));
-                }
-            }
-        });
-
-        // Click en "Registrarse"
-        registrarseLabel.addMouseListener(new MouseAdapter() {
+        
+        // Forgot password
+        forgotPasswordLabel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                handleRegistrarse();
+                handleForgotPassword();
             }
         });
+    }
+
+    // Panel de fondo con degradado
+    private static class BackgroundPanel extends JPanel {
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+            
+            // Degradado de azul oscuro a azul claro
+            GradientPaint gradient = new GradientPaint(
+                0, 0, new Color(0x1A365D),
+                0, getHeight(), new Color(0x2B6CB0)
+            );
+            g2.setPaint(gradient);
+            g2.fillRect(0, 0, getWidth(), getHeight());
+            
+            g2.dispose();
+        }
+    }
+
+    private void updateTabStates(boolean loginSelected) {
+        if (loginSelected) {
+            loginTabButton.setForeground(new Color(0x1A2E5A));
+            loginTabButton.setFont(loginTabButton.getFont().deriveFont(Font.BOLD));
+            registerTabButton.setForeground(new Color(0x4A90E2));
+            registerTabButton.setFont(registerTabButton.getFont().deriveFont(Font.PLAIN));
+        } else {
+            registerTabButton.setForeground(new Color(0x1A2E5A));
+            registerTabButton.setFont(registerTabButton.getFont().deriveFont(Font.BOLD));
+            loginTabButton.setForeground(new Color(0x4A90E2));
+            loginTabButton.setFont(loginTabButton.getFont().deriveFont(Font.PLAIN));
+        }
+        // Repintar los botones
+        loginTabButton.repaint();
+        registerTabButton.repaint();
     }
 
     private void handleLogin() {
@@ -382,8 +611,7 @@ public class LoginView extends JFrame {
             showError("Error interno: Controlador no inicializado.");
             return;
         }
-        // Delegar toda la lógica al controlador
-        controller.handleLogin(getEmailText(), getPasswordText(), isRememberMeSelected());
+        controller.handleLogin(getEmailText(), getPasswordText(), false);
     }
 
     private void handleRegistrarse() {
@@ -393,22 +621,22 @@ public class LoginView extends JFrame {
             showError("Controlador no inicializado.");
         }
     }
+    
+    private void handleForgotPassword() {
+        showSuccess("Funcionalidad de recuperación de contraseña próximamente.");
+    }
 
-    /**
-     * Carga los datos recordados si existen
-     */
     private void loadRememberedData() {
         if (controller != null) {
             String rememberedEmail = controller.getRememberedEmail();
             if (!rememberedEmail.isEmpty()) {
                 emailField.setText(rememberedEmail);
-                rememberMeCheckBox.setSelected(true);
-                passwordField.requestFocus(); // Enfocar en contraseña si email ya está
+                passwordField.requestFocus();
             }
         }
     }
 
-    // Métodos públicos para que el controller pueda mostrar mensajes
+    // Métodos públicos para el controller
     public void showError(String message) {
         JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
     }
@@ -417,7 +645,6 @@ public class LoginView extends JFrame {
         JOptionPane.showMessageDialog(this, message, "Éxito", JOptionPane.INFORMATION_MESSAGE);
     }
 
-    // Getters para que el controller pueda acceder a los datos si es necesario
     public String getEmailText() {
         return emailField.getText().trim();
     }
@@ -427,15 +654,59 @@ public class LoginView extends JFrame {
     }
 
     public boolean isRememberMeSelected() {
-        return rememberMeCheckBox.isSelected();
+        return false; // No incluimos checkbox en este diseño
     }
 
     public static void main(String[] args) {
-        // Look and feel del sistema para que se vea moderno
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception ignored) { }
+        } catch (Exception ignored) { 
+            // Fallback a look and feel por defecto
+        }
 
-        SwingUtilities.invokeLater(() -> new LoginView().setVisible(true));
+        SwingUtilities.invokeLater(() -> {
+            try {
+                // AQUÍ NECESITAS REEMPLAZAR CON TU IMPLEMENTACIÓN REAL
+                // Busca en tu proyecto cómo crear el IAutenticacionService
+                // Por ejemplo: new AutenticacionService(repo, hasher, emailPolicy, passwordPolicy)
+                
+                // Para pruebas rápidas, implementación temporal:
+                co.unicauca.gestiontrabajogrado.domain.service.IAutenticacionService tempService = 
+                    new co.unicauca.gestiontrabajogrado.domain.service.IAutenticacionService() {
+                        @Override
+                        public co.unicauca.gestiontrabajogrado.domain.model.User register(
+                            co.unicauca.gestiontrabajogrado.domain.model.User user, String plainPassword) {
+                            System.out.println("Mock register: " + user.getEmail());
+                            return user;
+                        }
+                        
+                        @Override
+                        public co.unicauca.gestiontrabajogrado.domain.model.User login(
+                            String email, String plainPassword) {
+                            System.out.println("Mock login: " + email);
+                            // Crear usuario ficticio para pruebas
+                            return new co.unicauca.gestiontrabajogrado.domain.model.User(
+                                1, // Cambié de 1L a 1 (Integer en lugar de Long)
+                                "Test", "User", "123456789",
+                                co.unicauca.gestiontrabajogrado.domain.model.enumProgram.INGENIERIA_DE_SISTEMAS,
+                                co.unicauca.gestiontrabajogrado.domain.model.enumRol.ESTUDIANTE,
+                                email, null);
+                        }
+                    };
+
+                LoginView loginView = new LoginView();
+                co.unicauca.gestiontrabajogrado.controller.LoginController loginController = 
+                    new co.unicauca.gestiontrabajogrado.controller.LoginController(tempService, loginView);
+                loginView.setController(loginController);
+                loginView.setVisible(true);
+                
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(null, 
+                    "Error al inicializar: " + e.getMessage(), 
+                    "Error", JOptionPane.ERROR_MESSAGE);
+                e.printStackTrace();
+            }
+        });
     }
+    
 }
