@@ -84,8 +84,9 @@ public class Main {
         IFormatoARepository formatoARepo     = new FormatoARepository();
         IArchivoService archivoService       = new ArchivoService();
 
+
         IProyectoGradoService proyectoService =
-                new ProyectoGradoService(proyectoRepo, formatoARepo, archivoService);
+                new ProyectoGradoService(proyectoRepo, formatoARepo, archivoService, userRepository);
 
         // 4) *** NUEVO *** Navigator que usará el LoginController para redirigir
         IDashBoardController navigator = new DashboardNavigator(autenticacionService, proyectoService);
