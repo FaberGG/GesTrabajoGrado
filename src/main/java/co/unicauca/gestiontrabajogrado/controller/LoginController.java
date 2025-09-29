@@ -271,4 +271,4 @@ public class LoginController {
         }
     }
 }
-// No se requiere cambio, cumple SRP y DIP.
+
