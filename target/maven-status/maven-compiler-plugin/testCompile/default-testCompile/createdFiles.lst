@@ -1,0 +1,14 @@
+co\unicauca\gestiontrabajogrado\repository\AuthSmokeTest.class
+co\unicauca\gestiontrabajogrado\domain\model\FormatoATest.class
+co\unicauca\gestiontrabajogrado\util\PasswordPolicyTest.class
+co\unicauca\gestiontrabajogrado\infrastructure\database\DatabaseConnectionTest.class
+co\unicauca\gestiontrabajogrado\infrastructure\repository\FormatoARepositoryIT.class
+co\unicauca\gestiontrabajogrado\infrastructure\repository\ProyectoGradoRepositoryIT.class
+co\unicauca\gestiontrabajogrado\domain\model\ProyectoGradoTest.class
+co\unicauca\gestiontrabajogrado\util\PasswordHasherTest.class
+co\unicauca\gestiontrabajogrado\domain\service\ArchivoServiceTest.class
+co\unicauca\gestiontrabajogrado\infrastructure\repository\UserRepositoryTest.class
+co\unicauca\gestiontrabajogrado\infrastructure\database\DatabaseInitializerTest.class
+co\unicauca\gestiontrabajogrado\domain\service\AuthenticationServiceTest.class
+co\unicauca\gestiontrabajogrado\domain\service\ProyectoGradoServiceTest.class
+co\unicauca\gestiontrabajogrado\util\EmailPolicyTest.class

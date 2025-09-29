@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="eb77c150-51fc-47d2-8c45-28d43cf87b0c" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/src/main/java/co/unicauca/gestiontrabajogrado/domain/service/ProyectoGradoService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/co/unicauca/gestiontrabajogrado/domain/service/ProyectoGradoService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/co/unicauca/gestiontrabajogrado/domain/service/ProyectoGradoServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/co/unicauca/gestiontrabajogrado/domain/service/ProyectoGradoServiceTest.java" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;Nes-07&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/FaberGG/GesTrabajoGrado.git&quot;,
+    &quot;accountId&quot;: &quot;c4418c38-6d01-4b50-a591-6d6f7256239b&quot;
+  }
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 4
+}</component>
+  <component name="ProjectId" id="33KgBTWg01NDWephsV4pHIM4P9B" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;loginview-registreview&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/YEIMY/Documents/NetBeansProjects/GesTrbajodeGrado/GesTrabajoGrado&quot;
+  }
+}</component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="eb77c150-51fc-47d2-8c45-28d43cf87b0c" name="Changes" comment="" />
+      <created>1759071044084</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1759071044084</updated>
+    </task>
+    <servers />
+  </component>
+</project>
