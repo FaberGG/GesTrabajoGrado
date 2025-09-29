@@ -20,6 +20,8 @@ public class LoginController {
 
     private final IAutenticacionService autenticacionService;
     private LoginView loginView;
+    private IDashBoardController navigator;
+    public void setNavigator(IDashBoardController navigator) { this.navigator = navigator; }
 
     public LoginController(IAutenticacionService autenticacionService, LoginView loginView) {
         this.autenticacionService = autenticacionService;
