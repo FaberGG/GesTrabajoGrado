@@ -4,6 +4,7 @@ import co.unicauca.gestiontrabajogrado.domain.model.User;
 import co.unicauca.gestiontrabajogrado.domain.service.IProyectoGradoService;
 import co.unicauca.gestiontrabajogrado.domain.service.IUserService;
 import co.unicauca.gestiontrabajogrado.domain.service.ServiceLocator;
+import co.unicauca.gestiontrabajogrado.dto.FormatoADetalleDTO;
 import co.unicauca.gestiontrabajogrado.dto.ProyectoGradoResponseDTO;
 import co.unicauca.gestiontrabajogrado.presentation.dashboard.estudianteview.EstudianteView;
 
@@ -16,13 +17,15 @@ public class EstudianteController {
     private IUserService userService;
     private ProyectoGradoResponseDTO proyectoActual;
 
-    public EstudianteController(EstudianteView view, User user) {
+    private IDashBoardController navigator;
+    public void setNavigator(IDashBoardController navigator) { this.navigator = navigator; }
+
+    public EstudianteController(EstudianteView view, User user, IProyectoGradoService proyectoGradoService, IUserService userService) {
         this.view = view;
         this.currentUser = user;
         try {
-            ServiceLocator locator = ServiceLocator.getInstance();
-            this.proyectoGradoService = locator.getProyectoGradoService();
-            this.userService = locator.getUserService();
+            this.proyectoGradoService = proyectoGradoService;
+            this.userService = userService;
 
             System.out.println("DEBUG: Servicios obtenidos correctamente del ServiceLocator");
         } catch (Exception e) {
@@ -88,7 +91,30 @@ public class EstudianteController {
         }
         return "No asignado";
     }
+    /**
+     * Maneja el cierre de sesión del estudiante.
+     */
+    public void handleCerrarSesion() {
+        int opcion = JOptionPane.showConfirmDialog(
+                view,
+                "¿Estás seguro de que deseas cerrar sesión?",
+                "Confirmar cierre de sesión",
+                JOptionPane.YES_NO_OPTION);
 
+        if (opcion == JOptionPane.YES_OPTION) {
+            try {
+                if (view != null) view.dispose();
+                if (navigator != null) {
+                    navigator.openLogin();
+                } else {
+                    System.err.println("No se pudo volver al login. Reinicia la aplicación.");
+                }
+            } catch (Exception e) {
+                System.err.println("Error al cerrar sesión: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+    }
     public String obtenerNombreEstudiante2() {
         if (proyectoActual == null) {
             return null;
@@ -125,7 +151,12 @@ public class EstudianteController {
                 return "Estado desconocido";
         }
     }
-
+    public FormatoADetalleDTO obtenerUltimoFormatoA() {
+        if (proyectoActual == null) {
+            return null;
+        }
+        return proyectoGradoService.obtenerUltimoFormatoA(proyectoActual.id);
+    }
     private Integer determinarOtroEstudiante() {
         if (proyectoActual.estudiante1Id != null && proyectoActual.estudiante2Id != null) {
             // Hay dos estudiantes, determinar cuál no es el usuario actual

@@ -8,6 +8,7 @@ import co.unicauca.gestiontrabajogrado.controller.DashboardNavigator;
 import co.unicauca.gestiontrabajogrado.controller.IDashBoardController;
 import co.unicauca.gestiontrabajogrado.controller.LoginController;
 
+import co.unicauca.gestiontrabajogrado.domain.service.*;
 import co.unicauca.gestiontrabajogrado.presentation.auth.LoginView;
 import co.unicauca.gestiontrabajogrado.presentation.common.ServiceManager;
 
@@ -23,14 +24,6 @@ import co.unicauca.gestiontrabajogrado.infrastructure.repository.ProyectoGradoRe
 import co.unicauca.gestiontrabajogrado.infrastructure.repository.FormatoARepository;
 
 // >>> Servicios de dominio
-import co.unicauca.gestiontrabajogrado.domain.service.IAutenticacionService;
-import co.unicauca.gestiontrabajogrado.domain.service.AutenticacionService;
-
-import co.unicauca.gestiontrabajogrado.domain.service.IProyectoGradoService;
-import co.unicauca.gestiontrabajogrado.domain.service.ProyectoGradoService;
-
-import co.unicauca.gestiontrabajogrado.domain.service.IArchivoService;
-import co.unicauca.gestiontrabajogrado.domain.service.ArchivoService;
 
 // Utils
 import co.unicauca.gestiontrabajogrado.util.EmailPolicy;
@@ -75,6 +68,7 @@ public class Main {
         IAutenticacionService autenticacionService = new AutenticacionService(
                 userRepository, passwordHasher, emailPolicy, passwordPolicy
         );
+        IUserService userService = new UserService(userRepository);
 
         // Exponerlo si lo usas globalmente
         ServiceManager.getInstance().setAutenticacionService(autenticacionService);
@@ -89,7 +83,7 @@ public class Main {
                 new ProyectoGradoService(proyectoRepo, formatoARepo, archivoService, userRepository);
 
         // 4) *** NUEVO *** Navigator que usará el LoginController para redirigir
-        IDashBoardController navigator = new DashboardNavigator(autenticacionService, proyectoService);
+        IDashBoardController navigator = new DashboardNavigator(autenticacionService, proyectoService, userService);
 
         // 5) Login (igual que antes) pero inyectando navigator
         LoginView loginView = new LoginView();

@@ -1,4 +1,4 @@
-package co.unicauca.gestiontrabajogrado.presentation.dashboard.coordinadorview;
+package co.unicauca.gestiontrabajogrado.controller;
 
 import co.unicauca.gestiontrabajogrado.domain.model.FormatoA;
 import co.unicauca.gestiontrabajogrado.domain.model.ProyectoGrado;
@@ -6,6 +6,8 @@ import co.unicauca.gestiontrabajogrado.domain.model.enumEstadoFormato;
 import co.unicauca.gestiontrabajogrado.domain.service.IProyectoGradoService;
 import co.unicauca.gestiontrabajogrado.infrastructure.repository.IFormatoARepository;
 import co.unicauca.gestiontrabajogrado.infrastructure.repository.IProyectoGradoRepository;
+import co.unicauca.gestiontrabajogrado.presentation.dashboard.coordinadorview.CoordinadorView;
+import co.unicauca.gestiontrabajogrado.presentation.dashboard.coordinadorview.PropuestaRow;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -22,6 +24,9 @@ public class CoordinadorController {
     private final IProyectoGradoRepository proyectoRepo;
     private final IFormatoARepository formatoRepo;
     private final IProyectoGradoService proyectoService;
+
+    private IDashBoardController navigator;
+    public void setNavigator(IDashBoardController navigator) { this.navigator = navigator; }
 
     // Vista asociada
     private CoordinadorView view;
@@ -96,7 +101,32 @@ public class CoordinadorController {
                 .filter(p -> p.estadoFormato() == estado)
                 .count();
     }
+    /**
+     * Maneja el cierre de sesión del coordinador.
+     */
+    public void handleCerrarSesion() {
+        if (view != null) {
+            int opcion = javax.swing.JOptionPane.showConfirmDialog(
+                    view,
+                    "¿Estás seguro de que deseas cerrar sesión?",
+                    "Confirmar cierre de sesión",
+                    javax.swing.JOptionPane.YES_NO_OPTION);
 
+            if (opcion == javax.swing.JOptionPane.YES_OPTION) {
+                try {
+                    view.dispose();
+                    if (navigator != null) {
+                        navigator.openLogin();
+                    } else {
+                        System.err.println("No se pudo volver al login. Reinicia la aplicación.");
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error al cerrar sesión: " + e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
     /**
      * Obtiene el detalle completo de una propuesta.
      */

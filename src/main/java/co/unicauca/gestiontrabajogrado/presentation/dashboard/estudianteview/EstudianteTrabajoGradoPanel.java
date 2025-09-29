@@ -12,7 +12,8 @@ import java.awt.event.ActionListener;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-
+import co.unicauca.gestiontrabajogrado.dto.FormatoADetalleDTO;
+import co.unicauca.gestiontrabajogrado.domain.model.enumEstadoFormato;
 public class EstudianteTrabajoGradoPanel extends JPanel {
     private EstudianteController controller;
     private EstudianteView parentView;
@@ -386,7 +387,6 @@ public class EstudianteTrabajoGradoPanel extends JPanel {
 
         return panel;
     }
-
     private List<TrackingItem> getTrackingItems() {
         List<TrackingItem> items = new ArrayList<>();
         ProyectoGradoResponseDTO proyecto = controller.getProyectoActual();
@@ -399,9 +399,17 @@ public class EstudianteTrabajoGradoPanel extends JPanel {
                 formatearFecha(proyecto.fechaCreacion)
         ));
 
-        // 2. Evaluaciones según el número de intentos
+        // 2. Obtener el último formato para conocer su estado real
+        FormatoADetalleDTO ultimoFormato = null;
+        try {
+            ultimoFormato = controller.obtenerUltimoFormatoA();
+        } catch (Exception e) {
+            System.err.println("Error obteniendo último formato: " + e.getMessage());
+        }
+
+        // 3. Evaluaciones según el número de intentos
         for (int intento = 1; intento <= Math.max(proyecto.numeroIntentos, 1); intento++) {
-            TrackingItem.EstadoIcono estadoItem = getEstadoIcono(proyecto, intento);
+            TrackingItem.EstadoIcono estadoItem = getEstadoIcono(proyecto, intento, ultimoFormato);
             String icono = getIconoParaEstado(estadoItem, intento, proyecto);
             String titulo = getTextoEvaluacion(intento);
             String descripcion = getDescripcionEvaluacion(intento, estadoItem);
@@ -409,17 +417,21 @@ public class EstudianteTrabajoGradoPanel extends JPanel {
 
             items.add(new TrackingItem(icono, estadoItem, titulo, descripcion, fecha));
 
-            if (estadoItem == TrackingItem.EstadoIcono.BAD && intento < proyecto.numeroIntentos) {
+            // Si el formato actual fue rechazado, agregar tarjeta de rechazo
+            if (ultimoFormato != null &&
+                    intento == proyecto.numeroIntentos &&
+                    ultimoFormato.estado == enumEstadoFormato.RECHAZADO) {
                 items.add(new TrackingItem(
                         "⚠", TrackingItem.EstadoIcono.BAD,
                         getTextoRechazo(intento),
-                        "Su propuesta ha sido rechazada y requiere correcciones",
+                        ultimoFormato.observaciones != null ? ultimoFormato.observaciones :
+                                "Su propuesta ha sido rechazada y requiere correcciones",
                         "Completado"
                 ));
             }
         }
 
-        // 3. Estado final
+        // 4. Estado final
         agregarEstadoFinal(items, proyecto);
 
         return items;
@@ -510,27 +522,34 @@ public class EstudianteTrabajoGradoPanel extends JPanel {
         }
     }
 
-    private TrackingItem.EstadoIcono getEstadoIcono(ProyectoGradoResponseDTO proyecto, int evaluacion) {
+
+    private TrackingItem.EstadoIcono getEstadoIcono(ProyectoGradoResponseDTO proyecto, int evaluacion,
+                                                    FormatoADetalleDTO ultimoFormato) {
         String estadoProyecto = proyecto.estado.toString();
 
-        if (estadoProyecto.equals("APROBADO")) {
-            if (evaluacion <= proyecto.numeroIntentos) {
-                return TrackingItem.EstadoIcono.OK;
-            }
-        } else if (estadoProyecto.equals("RECHAZADO") || estadoProyecto.equals("RECHAZADO_DEFINITIVO")) {
-            if (evaluacion < proyecto.numeroIntentos) {
-                return TrackingItem.EstadoIcono.BAD;
-            } else if (evaluacion == proyecto.numeroIntentos) {
-                return TrackingItem.EstadoIcono.IN_PROGRESS;
-            }
-        } else if (estadoProyecto.equals("EN_PROCESO")) {
-            if (evaluacion < proyecto.numeroIntentos) {
-                return TrackingItem.EstadoIcono.OK;
-            } else if (evaluacion == proyecto.numeroIntentos) {
-                return TrackingItem.EstadoIcono.IN_PROGRESS;
+        // Si es la evaluación actual, consultar el estado real del FormatoA
+        if (evaluacion == proyecto.numeroIntentos && ultimoFormato != null) {
+            switch (ultimoFormato.estado) {
+                case APROBADO:
+                    return TrackingItem.EstadoIcono.OK;
+                case RECHAZADO:
+                    return TrackingItem.EstadoIcono.BAD;
+                case PENDIENTE:
+                default:
+                    return TrackingItem.EstadoIcono.IN_PROGRESS;
             }
         }
 
+        // Para evaluaciones anteriores
+        if (evaluacion < proyecto.numeroIntentos) {
+            // Las evaluaciones pasadas fueron completadas (ya sea aprobadas o rechazadas)
+            if (estadoProyecto.equals("RECHAZADO") || estadoProyecto.equals("RECHAZADO_DEFINITIVO")) {
+                return TrackingItem.EstadoIcono.BAD;
+            }
+            return TrackingItem.EstadoIcono.OK;
+        }
+
+        // Evaluaciones futuras
         return TrackingItem.EstadoIcono.NOT_STARTED;
     }
 

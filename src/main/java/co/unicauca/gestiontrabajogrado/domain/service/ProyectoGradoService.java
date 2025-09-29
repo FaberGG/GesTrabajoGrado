@@ -203,7 +203,7 @@ public class ProyectoGradoService implements IProyectoGradoService {
         p.setObjetivoGeneral(objetivoGeneral.trim());
         p.setObjetivosEspecificos(objetivosEspecificos.trim());
 
-        // ✅ Obtener el siguiente número de versión basado en los FormatoA existentes
+        // Obtener el siguiente número de versión basado en los FormatoA existentes
         Optional<FormatoA> ultimoFormato = formatoRepo.findLastFormatoByProyectoId(proyectoId);
         int siguienteVersion = ultimoFormato.map(f -> f.getNumeroIntento() + 1).orElse(1);
 
@@ -211,7 +211,7 @@ public class ProyectoGradoService implements IProyectoGradoService {
 
         FormatoA f = new FormatoA();
         f.setProyectoGradoId(proyectoId);
-        f.setNumeroIntento(siguienteVersion);  // ✅ Nueva versión incremental
+        f.setNumeroIntento(siguienteVersion);
         f.setRutaArchivo(ruta);
         f.setNombreArchivo(archivo.getName());
 
@@ -222,6 +222,8 @@ public class ProyectoGradoService implements IProyectoGradoService {
         }
 
         f = formatoRepo.save(f);
+
+        p.setNumeroIntentos(siguienteVersion);
 
         // Cambiar estado a EN_PROCESO
         p.setEstado(enumEstadoProyecto.EN_PROCESO);

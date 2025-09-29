@@ -19,13 +19,17 @@ public class EstudianteView extends JFrame {
     public static final String DASHBOARD_VIEW = "dashboard";
     public static final String TRABAJO_GRADO_VIEW = "trabajo_grado";
 
-    public EstudianteView(User user) {
+    // Constructor sin parámetros para compatibilidad con DashboardNavigator
+    public EstudianteView() {
         super("Panel del Estudiante");
-        this.currentUser = user;
-        this.controller = new EstudianteController(this, user);
-
         initializeComponents();
         setupLayout();
+    }
+
+    // Constructor con usuario (mantener para compatibilidad con código existente)
+    public EstudianteView(User user) {
+        this();
+        setUser(user);
     }
 
     private void initializeComponents() {
@@ -54,30 +58,81 @@ public class EstudianteView extends JFrame {
         body.setBackground(UIConstants.BG_APP);
         root.add(body, BorderLayout.CENTER);
 
-        // Agregar las vistas al CardLayout
+        body.add(contentPanel, BorderLayout.CENTER);
+    }
+
+    /**
+     * Configura el usuario y reconstruye las vistas
+     */
+    public void setUser(User user) {
+        this.currentUser = user;
+        rebuildViews();
+    }
+
+    /**
+     * Configura el controller
+     */
+    public void setController(EstudianteController controller) {
+        this.controller = controller;
+        rebuildViews();
+    }
+
+    /**
+     * Reconstruye las vistas con el usuario y controller actuales
+     */
+    private void rebuildViews() {
+        if (currentUser == null || controller == null) {
+            return; // Esperar a que ambos estén configurados
+        }
+
+        contentPanel.removeAll();
         contentPanel.add(new EstudianteDashboardPanel(currentUser, this), DASHBOARD_VIEW);
         contentPanel.add(new EstudianteTrabajoGradoPanel(controller, this), TRABAJO_GRADO_VIEW);
 
-        body.add(contentPanel, BorderLayout.CENTER);
-
         // Mostrar vista inicial
         showView(DASHBOARD_VIEW);
+
+        contentPanel.revalidate();
+        contentPanel.repaint();
     }
 
     public void showView(String viewName) {
-        cardLayout.show(contentPanel, viewName);
+        if (cardLayout != null && contentPanel != null) {
+            cardLayout.show(contentPanel, viewName);
+        }
     }
 
     public void showTrabajoGradoView() {
-        // Cargar datos del trabajo de grado antes de mostrar la vista
+        if (controller == null) {
+            System.err.println("ERROR: Controller no configurado");
+            return;
+        }
+
         System.out.println("DEBUG: Mostrando vista de trabajo de grado");
         controller.cargarDatosTrabajoGrado();
 
         // Recrear el panel con los datos actualizados
-        contentPanel.remove(1); // Remover el panel anterior
+        Component[] components = contentPanel.getComponents();
+        for (int i = 0; i < components.length; i++) {
+            Component comp = components[i];
+            // Encontrar el panel de trabajo de grado por nombre
+            String name = null;
+            for (Component c : contentPanel.getComponents()) {
+                if (c == comp) {
+                    // Buscar en el CardLayout
+                    break;
+                }
+            }
+        }
+
+        // Remover y recrear el panel de trabajo de grado
+        contentPanel.remove(1);
         contentPanel.add(new EstudianteTrabajoGradoPanel(controller, this), TRABAJO_GRADO_VIEW);
 
         showView(TRABAJO_GRADO_VIEW);
+        contentPanel.revalidate();
+        contentPanel.repaint();
+
         System.out.println("DEBUG: Vista cambiada a trabajo de grado");
     }
 
@@ -85,13 +140,30 @@ public class EstudianteView extends JFrame {
         return controller;
     }
 
-    public static void main(String args[]) {
-        try {
-            //UIManager.setLookAndFeel(UIManager.getSystemLookAndFeel());
-        } catch (Exception ignored) { }
-
-        SwingUtilities.invokeLater(() -> {
-            new EstudianteView(new User()).setVisible(true);
-        });
+    public User getCurrentUser() {
+        return currentUser;
     }
+
+//    // Main de prueba (solo para desarrollo)
+//    public static void main(String args[]) {
+//        try {
+//            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+//        } catch (Exception ignored) { }
+//
+//        SwingUtilities.invokeLater(() -> {
+//            // Crear usuario de prueba
+//            User testUser = new User();
+//            testUser.setId(1);
+//            testUser.setNombres("Juan");
+//            testUser.setApellidos("Pérez");
+//
+//            EstudianteView view = new EstudianteView();
+//            EstudianteController controller = new EstudianteController(view, testUser);
+//
+//            view.setUser(testUser);
+//            view.setController(controller);
+//
+//            view.setVisible(true);
+//        });
+//    }
 }

@@ -1,5 +1,6 @@
 package co.unicauca.gestiontrabajogrado.presentation.dashboard.coordinadorview;
 
+import co.unicauca.gestiontrabajogrado.controller.CoordinadorController;
 import co.unicauca.gestiontrabajogrado.domain.model.enumEstadoFormato;
 
 import javax.swing.*;

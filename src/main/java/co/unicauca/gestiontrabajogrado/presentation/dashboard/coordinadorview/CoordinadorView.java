@@ -1,9 +1,8 @@
 package co.unicauca.gestiontrabajogrado.presentation.dashboard.coordinadorview;
 
+import co.unicauca.gestiontrabajogrado.controller.CoordinadorController;
 import co.unicauca.gestiontrabajogrado.domain.model.enumEstadoFormato;
 import co.unicauca.gestiontrabajogrado.presentation.common.HeaderPanel;
-
-import co.unicauca.gestiontrabajogrado.presentation.common.ServiceManager;
 
 import co.unicauca.gestiontrabajogrado.infrastructure.repository.IProyectoGradoRepository;
 import co.unicauca.gestiontrabajogrado.infrastructure.repository.IFormatoARepository;
@@ -18,7 +17,6 @@ import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.*;
 import java.util.List;
 
 /**
@@ -28,7 +26,7 @@ import java.util.List;
 public class CoordinadorView extends JFrame {
 
     // ----------------- Controlador -----------------
-    private final CoordinadorController controller;
+    private CoordinadorController controller;
 
     // ----------------- Navegación -------------------
     private final CardLayout cards = new CardLayout();
@@ -41,16 +39,20 @@ public class CoordinadorView extends JFrame {
     private JCheckBox cbSoloPendientes;
     private JLabel lblPendientes;
     private JPopupMenu menuPopup;
-
+    public CoordinadorView() {
+        this(null); // Llama al constructor principal con null
+    }
     public CoordinadorView(CoordinadorController controller) {
         super("Panel Coordinador - Gestión de Trabajos de Grado");
         this.controller = controller;
-        this.controller.setView(this); // Asociar vista con controlador
+
+        // Solo asociar si el controller no es null
+        if (this.controller != null) {
+            this.controller.setView(this);
+        }
 
         configurarVentana();
         construirUI();
-
-        // Arranque en HOME
         mostrar(CARD_HOME);
     }
 
@@ -149,7 +151,22 @@ public class CoordinadorView extends JFrame {
         p.add(lActual);
         return p;
     }
-
+    public void setController(CoordinadorController controller) {
+        this.controller = controller;
+        if (this.controller != null) {
+            this.controller.setView(this);
+        }
+    }
+    /**
+     * Carga las propuestas inicialmente.
+     * @param soloPendientes si debe mostrar solo pendientes
+     */
+    public void cargarPropuestas(boolean soloPendientes) {
+        if (cbSoloPendientes != null) {
+            cbSoloPendientes.setSelected(soloPendientes);
+        }
+        recargarTabla();
+    }
     private JPanel buildRedBanner(String title, String subtitle) {
         JPanel banner = new JPanel() {
             @Override protected void paintComponent(Graphics g) {
