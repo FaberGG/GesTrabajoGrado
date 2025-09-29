@@ -1,7 +1,7 @@
 package co.unicauca.gestiontrabajogrado.controller;
 
 import co.unicauca.gestiontrabajogrado.domain.service.IProyectoGradoService;
-import co.unicauca.gestiontrabajogrado.domain.service.ProyectoGradoService; // <-- para el downcast opcional
+import co.unicauca.gestiontrabajogrado.domain.service.ProyectoGradoService;
 import co.unicauca.gestiontrabajogrado.domain.model.*;
 import co.unicauca.gestiontrabajogrado.dto.*;
 import co.unicauca.gestiontrabajogrado.presentation.dashboard.docenteview.DocenteView;
@@ -34,19 +34,16 @@ public class DocenteController {
     // ---------------- Creación de proyecto ----------------
     public void handleCrearProyecto(ProyectoGradoRequestDTO request, File archivoFormatoA, File cartaAceptacion) {
         try {
-            // Validaciones mínimas
             if (request == null) { showError("Solicitud inválida."); return; }
             if (request.titulo == null || request.titulo.isBlank()) { showError("Por favor, ingresa el título del proyecto."); return; }
             if (request.modalidad == null) { showError("Por favor, selecciona una modalidad."); return; }
             if (archivoFormatoA == null) { showError("Debes adjuntar el Formato A (PDF)."); return; }
 
-            // Si es práctica profesional, exigir carta y validarla
             if (request.modalidad == enumModalidad.PRACTICA_PROFESIONAL) {
                 if (cartaAceptacion == null) {
                     showError("Para Práctica profesional debes adjuntar la Carta de Aceptación.");
                     return;
                 }
-                // usa la validación de la interfaz (está declarada)
                 if (!proyectoGradoService.validarModalidadPracticaProfesional(cartaAceptacion)) {
                     showError("La carta de aceptación no es válida (debe ser PDF).");
                     return;
@@ -54,12 +51,9 @@ public class DocenteController {
             }
 
             ProyectoGrado creado;
-
-            // Si tenemos exactamente la implementación concreta, usamos la sobrecarga con carta:
             if (cartaAceptacion != null && proyectoGradoService instanceof ProyectoGradoService svc) {
                 creado = svc.crearNuevoProyecto(request, archivoFormatoA, cartaAceptacion);
             } else {
-                // Camino compatible con la interfaz
                 creado = proyectoGradoService.crearNuevoProyecto(request, archivoFormatoA);
             }
 
@@ -81,9 +75,7 @@ public class DocenteController {
             if (archivoFormatoA == null) { showError("Debes adjuntar el Formato A (PDF)."); return; }
 
             FormatoA nuevo;
-
             if (cartaAceptacion != null && proyectoGradoService instanceof ProyectoGradoService svc) {
-                // sobrecarga con carta (solo si la implementación concreta está disponible)
                 nuevo = svc.subirNuevaVersion(proyectoId, archivoFormatoA, cartaAceptacion);
             } else {
                 nuevo = proyectoGradoService.subirNuevaVersion(proyectoId, archivoFormatoA);
@@ -142,7 +134,6 @@ public class DocenteController {
         }
     }
 
-    /** Transforma DTOs a items de la vista y los inyecta (NO depende de un método extra en la vista). */
     public void actualizarListaProyectos(List<ProyectoGradoResponseDTO> proyectos) {
         if (docenteView == null || proyectos == null) return;
 
@@ -155,15 +146,11 @@ public class DocenteController {
         docenteView.setPropuestas(items);
     }
 
-    /** Pide al servicio y reusa el método de arriba (evita llamar a un método que la vista no tenga). */
     public void actualizarListaProyectos() {
         if (docenteView == null) return;
-
         SwingUtilities.invokeLater(() -> {
             try {
                 List<ProyectoGradoResponseDTO> proyectos = obtenerMisProyectos();
-                // 👇 usamos nuestro propio método (no el de la vista),
-                // así no dependemos de que exista DocenteView.actualizarListaProyectos(...)
                 actualizarListaProyectos(proyectos);
             } catch (Exception e) {
                 showError("Error al actualizar la lista de proyectos.");
