@@ -30,6 +30,53 @@ public class ProyectoGradoService implements IProyectoGradoService {
         return crearNuevoProyecto(req, archivo, null);
     }
 
+    public FormatoADetalleDTO obtenerUltimoFormatoA(Integer proyectoId) {
+        Optional<FormatoA> formatoOpt = formatoRepo.findLastFormatoByProyectoId(proyectoId);
+
+        if (formatoOpt.isEmpty()) {
+            throw new RuntimeException("No se encontró un Formato A para el proyecto con id " + proyectoId);
+        }
+
+        FormatoA formato = formatoOpt.get();
+
+        FormatoADetalleDTO dto = new FormatoADetalleDTO();
+        dto.id = formato.getId();
+        dto.version = formato.getNumeroIntento();
+        dto.estado = formato.getEstado();
+        dto.observaciones = formato.getObservaciones();
+        dto.nombreArchivo = formato.getNombreArchivo();
+
+        return dto;
+    }
+
+
+    public ProyectoGradoResponseDTO obtenerProyectoPorId(Integer idProyecto) {
+        Optional<ProyectoGrado> proyectoOpt = proyectoRepo.findById(idProyecto);
+
+        if (proyectoOpt.isEmpty()) {
+            throw new RuntimeException("Proyecto con id " + idProyecto + " no encontrado.");
+        }
+
+        ProyectoGrado proyecto = proyectoOpt.get();
+
+        // Convertir entidad a DTO
+        ProyectoGradoResponseDTO dto = new ProyectoGradoResponseDTO();
+        dto.id = proyecto.getId();
+        dto.titulo = proyecto.getTitulo();
+        dto.modalidad = proyecto.getModalidad();
+        dto.fechaCreacion = proyecto.getFechaCreacion();
+        dto.directorId = proyecto.getDirectorId();
+        dto.codirectorId = proyecto.getCodirectorId();
+        dto.objetivoGeneral = proyecto.getObjetivoGeneral();
+        dto.objetivosEspecificos = proyecto.getObjetivosEspecificos();
+        dto.estudiante1Id = proyecto.getEstudiante1Id();
+        dto.estudiante2Id = proyecto.getEstudiante2Id();
+        dto.estado = proyecto.getEstado();
+        dto.numeroIntentos = proyecto.getNumeroIntentos();
+
+        return dto;
+    }
+
     // Sobrecarga con carta de aceptación
     public ProyectoGrado crearNuevoProyecto(ProyectoGradoRequestDTO req, File archivo, File cartaAceptacion) {
         Objects.requireNonNull(req, "request es requerido");
@@ -55,10 +102,15 @@ public class ProyectoGradoService implements IProyectoGradoService {
 
         // 2) Estudiantes (size por modalidad)
         List<Integer> estudiantes = new ArrayList<>();
+        //debug imprimir ids
+        System.out.println("id1:"+req.estudiante1Id+" id2:"+req.estudiante2Id);
         if (req.estudiante1Id != null) estudiantes.add(req.estudiante1Id);
         if (req.estudiante2Id != null) estudiantes.add(req.estudiante2Id);
 
         int size = estudiantes.size();
+        //imprimo debug estudiantes
+        System.out.println("Estudiantes " + estudiantes.toString());
+
         int max = req.modalidad.getMaxEstudiantes();
 
         if (req.modalidad == enumModalidad.PRACTICA_PROFESIONAL) {
@@ -123,6 +175,59 @@ public class ProyectoGradoService implements IProyectoGradoService {
     @Override
     public FormatoA subirNuevaVersion(Integer proyectoId, File archivo) {
         return subirNuevaVersion(proyectoId, archivo, null);
+    }
+    public FormatoA subirNuevaVersion(Integer proyectoId, File archivo, File cartaAceptacion,
+                                      String objetivoGeneral, String objetivosEspecificos) {
+        Objects.requireNonNull(proyectoId, "proyectoId es requerido");
+        Objects.requireNonNull(archivo, "archivo PDF es requerido");
+        Objects.requireNonNull(objetivoGeneral, "objetivoGeneral es requerido");
+        Objects.requireNonNull(objetivosEspecificos, "objetivosEspecificos es requerido");
+
+        ProyectoGrado p = proyectoRepo.findById(proyectoId)
+                .orElseThrow(() -> new IllegalArgumentException("Proyecto no encontrado"));
+
+        if (!p.puedeSubirNuevaVersion()) {
+            throw new IllegalStateException("No se puede subir nueva versión (estado/intentos)");
+        }
+
+        if (p.getModalidad() == enumModalidad.PRACTICA_PROFESIONAL) {
+            if (cartaAceptacion == null) {
+                throw new IllegalArgumentException("Para modalidad de Práctica Profesional se requiere carta de aceptación");
+            }
+            if (!archivoService.validarTipoPDF(cartaAceptacion)) {
+                throw new IllegalArgumentException("La carta de aceptación no es válida (debe ser PDF)");
+            }
+        }
+
+        // Actualizar objetivos del proyecto
+        p.setObjetivoGeneral(objetivoGeneral.trim());
+        p.setObjetivosEspecificos(objetivosEspecificos.trim());
+
+        // ✅ Obtener el siguiente número de versión basado en los FormatoA existentes
+        Optional<FormatoA> ultimoFormato = formatoRepo.findLastFormatoByProyectoId(proyectoId);
+        int siguienteVersion = ultimoFormato.map(f -> f.getNumeroIntento() + 1).orElse(1);
+
+        String ruta = archivoService.guardarArchivo(archivo, proyectoId, siguienteVersion);
+
+        FormatoA f = new FormatoA();
+        f.setProyectoGradoId(proyectoId);
+        f.setNumeroIntento(siguienteVersion);  // ✅ Nueva versión incremental
+        f.setRutaArchivo(ruta);
+        f.setNombreArchivo(archivo.getName());
+
+        if (p.getModalidad() == enumModalidad.PRACTICA_PROFESIONAL && cartaAceptacion != null) {
+            String rutaCarta = archivoService.guardarArchivoCarta(cartaAceptacion, proyectoId, siguienteVersion);
+            f.setRutaCartaAceptacion(rutaCarta);
+            f.setNombreCartaAceptacion(cartaAceptacion.getName());
+        }
+
+        f = formatoRepo.save(f);
+
+        // Cambiar estado a EN_PROCESO
+        p.setEstado(enumEstadoProyecto.EN_PROCESO);
+        proyectoRepo.update(p);
+
+        return f;
     }
 
     // Sobrecarga con carta

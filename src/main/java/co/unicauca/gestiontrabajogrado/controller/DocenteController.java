@@ -32,21 +32,30 @@ public class DocenteController {
     public User getCurrentUser() { return currentUser; }
 
     // ---------------- Creación de proyecto ----------------
-    public void handleCrearProyecto(ProyectoGradoRequestDTO request, File archivoFormatoA, File cartaAceptacion) {
+    public boolean handleCrearProyecto(ProyectoGradoRequestDTO request, File archivoFormatoA, File cartaAceptacion) {
         try {
-            if (request == null) { showError("Solicitud inválida."); return; }
-            if (request.titulo == null || request.titulo.isBlank()) { showError("Por favor, ingresa el título del proyecto."); return; }
-            if (request.modalidad == null) { showError("Por favor, selecciona una modalidad."); return; }
-            if (archivoFormatoA == null) { showError("Debes adjuntar el Formato A (PDF)."); return; }
+            if (request == null) { showError("Solicitud inválida."); return false; }
+            if (request.titulo == null || request.titulo.isBlank()) {
+                showError("Por favor, ingresa el título del proyecto.");
+                return false;
+            }
+            if (request.modalidad == null) {
+                showError("Por favor, selecciona una modalidad.");
+                return false;
+            }
+            if (archivoFormatoA == null) {
+                showError("Debes adjuntar el Formato A (PDF).");
+                return false;
+            }
 
             if (request.modalidad == enumModalidad.PRACTICA_PROFESIONAL) {
                 if (cartaAceptacion == null) {
                     showError("Para Práctica profesional debes adjuntar la Carta de Aceptación.");
-                    return;
+                    return false;
                 }
                 if (!proyectoGradoService.validarModalidadPracticaProfesional(cartaAceptacion)) {
                     showError("La carta de aceptación no es válida (debe ser PDF).");
-                    return;
+                    return false;
                 }
             }
 
@@ -59,71 +68,68 @@ public class DocenteController {
 
             showSuccess("Proyecto creado exitosamente" + (cartaAceptacion != null ? " con carta de aceptación." : "."));
             actualizarListaProyectos();
+            return true;
 
         } catch (IllegalArgumentException e) {
             showError("Error de validación: " + e.getMessage());
+            return false;
         } catch (Exception e) {
-            showError("Ha ocurrido un error inesperado al crear el proyecto.");
+            showError("Ha ocurrido un error inesperado al crear el proyecto: " + e.getMessage());
             e.printStackTrace();
+            return false;
         }
     }
 
     // ---------------- Nueva versión del Formato A ----------------
-    public void handleSubirNuevaVersion(Integer proyectoId, File archivoFormatoA, File cartaAceptacion) {
+// ---------------- Nueva versión del Formato A ----------------
+    public boolean handleSubirNuevaVersion(Integer proyectoId, File archivoFormatoA, File cartaAceptacion,
+                                           String objetivoGeneral, String objetivosEspecificos) {
         try {
-            if (proyectoId == null) { showError("ID de proyecto inválido."); return; }
-            if (archivoFormatoA == null) { showError("Debes adjuntar el Formato A (PDF)."); return; }
-
-            FormatoA nuevo;
-            if (cartaAceptacion != null && proyectoGradoService instanceof ProyectoGradoService svc) {
-                nuevo = svc.subirNuevaVersion(proyectoId, archivoFormatoA, cartaAceptacion);
-            } else {
-                nuevo = proyectoGradoService.subirNuevaVersion(proyectoId, archivoFormatoA);
+            if (proyectoId == null) {
+                showError("ID de proyecto inválido.");
+                return false;
+            }
+            if (archivoFormatoA == null) {
+                showError("Debes adjuntar el Formato A (PDF).");
+                return false;
             }
 
-            showSuccess("Nueva versión subida correctamente.");
+            // Validar objetivos
+            if (objetivoGeneral == null || objetivoGeneral.trim().isEmpty()) {
+                showError("El Objetivo General no puede estar vacío.");
+                return false;
+            }
+            if (objetivosEspecificos == null || objetivosEspecificos.trim().isEmpty()) {
+                showError("Los Objetivos Específicos no pueden estar vacíos.");
+                return false;
+            }
+
+            // Verificar que el servicio es del tipo correcto
+            if (!(proyectoGradoService instanceof ProyectoGradoService)) {
+                showError("El servicio no soporta esta operación.");
+                return false;
+            }
+
+            ProyectoGradoService svc = (ProyectoGradoService) proyectoGradoService;
+            FormatoA nuevo = svc.subirNuevaVersion(proyectoId, archivoFormatoA, cartaAceptacion,
+                    objetivoGeneral, objetivosEspecificos);
+
+            showSuccess("Nueva versión subida correctamente con objetivos actualizados.");
             actualizarListaProyectos();
+            return true;
 
         } catch (IllegalArgumentException e) {
             showError("Error de validación: " + e.getMessage());
+            return false;
         } catch (Exception e) {
-            showError("Ha ocurrido un error inesperado al subir la nueva versión.");
+            showError("Ha ocurrido un error inesperado: " + e.getMessage());
             e.printStackTrace();
+            return false;
         }
     }
 
-    // ---------------- Aprobación / Rechazo ----------------
-    public void handleAprobarFormatoA(Integer formatoId, String observaciones) {
-        try {
-            if (formatoId == null) { showError("ID de formato inválido."); return; }
-            proyectoGradoService.aprobarFormatoA(formatoId, observaciones, currentUser.getId());
-            showSuccess("Formato A aprobado.");
-            actualizarListaProyectos();
-        } catch (IllegalArgumentException e) {
-            showError("Error de validación: " + e.getMessage());
-        } catch (Exception e) {
-            showError("Error al aprobar el formato.");
-            e.printStackTrace();
-        }
-    }
 
-    public void handleRechazarFormatoA(Integer formatoId, String observaciones) {
-        try {
-            if (formatoId == null) { showError("ID de formato inválido."); return; }
-            if (observaciones == null || observaciones.isBlank()) { showError("Debes ingresar observaciones para el rechazo."); return; }
-
-            proyectoGradoService.rechazarFormatoA(formatoId, observaciones, currentUser.getId());
-            showSuccess("Formato A rechazado.");
-            actualizarListaProyectos();
-        } catch (IllegalArgumentException e) {
-            showError("Error de validación: " + e.getMessage());
-        } catch (Exception e) {
-            showError("Error al rechazar el formato.");
-            e.printStackTrace();
-        }
-    }
-
-    // ---------------- Carga de datos para la vista ----------------
+    // ---------------- Consultas de proyectos ----------------
     public List<ProyectoGradoResponseDTO> obtenerMisProyectos() {
         try {
             return proyectoGradoService.obtenerProyectosPorDocente(currentUser.getId());
@@ -134,18 +140,27 @@ public class DocenteController {
         }
     }
 
-    public void actualizarListaProyectos(List<ProyectoGradoResponseDTO> proyectos) {
-        if (docenteView == null || proyectos == null) return;
-
-        List<DocenteView.PropuestaItem> items = proyectos.stream()
-                .map(p -> new DocenteView.PropuestaItem(
-                        p.titulo,
-                        p.fechaCreacion != null ? p.fechaCreacion.toString() : "Sin fecha"))
-                .collect(Collectors.toList());
-
-        docenteView.setPropuestas(items);
+    public ProyectoGradoResponseDTO obtenerProyectoPorId(Integer proyectoId) {
+        try {
+            return proyectoGradoService.obtenerProyectoPorId(proyectoId);
+        } catch (Exception e) {
+            showError("Error al obtener el proyecto.");
+            e.printStackTrace();
+            return null;
+        }
     }
 
+    public FormatoADetalleDTO obtenerUltimoFormatoA(Integer proyectoId) {
+        try {
+            return proyectoGradoService.obtenerUltimoFormatoA(proyectoId);
+        } catch (Exception e) {
+            showError("Error al obtener los detalles del formato.");
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    // ---------------- Actualización de vista ----------------
     public void actualizarListaProyectos() {
         if (docenteView == null) return;
         SwingUtilities.invokeLater(() -> {
@@ -157,6 +172,22 @@ public class DocenteController {
                 e.printStackTrace();
             }
         });
+    }
+
+    public void actualizarListaProyectos(List<ProyectoGradoResponseDTO> proyectos) {
+        if (docenteView == null || proyectos == null) return;
+
+        List<DocenteView.PropuestaItem> items = proyectos.stream()
+                .map(p -> new DocenteView.PropuestaItem(
+                        p.titulo,
+                        p.fechaCreacion != null ? p.fechaCreacion.toString() : "Sin fecha",
+                        p.id,
+                        p.estado != null ? p.estado.toString() : "DESCONOCIDO",
+                        p.numeroIntentos != null ? p.numeroIntentos : 0
+                ))
+                .collect(Collectors.toList());
+
+        docenteView.setPropuestas(items);
     }
 
     // ---------------- Sesión / Navegación ----------------
@@ -198,6 +229,7 @@ public class DocenteController {
     private void showError(String message) {
         JOptionPane.showMessageDialog(docenteView, message, "Error", JOptionPane.ERROR_MESSAGE);
     }
+
     private void showSuccess(String message) {
         JOptionPane.showMessageDialog(docenteView, message, "Éxito", JOptionPane.INFORMATION_MESSAGE);
     }

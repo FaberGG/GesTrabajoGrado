@@ -50,6 +50,7 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 
+import co.unicauca.gestiontrabajogrado.domain.model.enumEstadoProyecto;
 import co.unicauca.gestiontrabajogrado.presentation.common.GradientePanel;
 import co.unicauca.gestiontrabajogrado.presentation.common.DropFileField;
 import co.unicauca.gestiontrabajogrado.domain.model.User;
@@ -58,7 +59,7 @@ import co.unicauca.gestiontrabajogrado.domain.model.User;
 import co.unicauca.gestiontrabajogrado.controller.DocenteController;
 import co.unicauca.gestiontrabajogrado.domain.model.enumModalidad;
 import co.unicauca.gestiontrabajogrado.dto.ProyectoGradoRequestDTO;
-
+import co.unicauca.gestiontrabajogrado.dto.*;
 public class DocenteView extends JFrame {
 
     // ===== Paleta / Tipos =====
@@ -91,6 +92,10 @@ public class DocenteView extends JFrame {
     private Runnable onDescargarPlantilla;
     private Runnable onLogout;
 
+    // Agregar como campo de instancia:
+    private final DetalleProyectoModal modalDetalle = new DetalleProyectoModal();
+
+
     public DocenteView() {
         setTitle("Gestión de Trabajos de Grado - Docente");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -111,6 +116,7 @@ public class DocenteView extends JFrame {
         });
 
         homePanel.btnMenu.addActionListener(this::mostrarMenu);
+        homePanel.setOnProyectoClick(this::abrirModalDetalleProyecto);
     }
     public DocenteView(User user) {
         this();
@@ -218,6 +224,34 @@ public class DocenteView extends JFrame {
         b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         return b;
     }
+    private void abrirModalDetalleProyecto(PropuestaItem item) {
+        if (controller == null) return;
+
+        ProyectoGradoResponseDTO proyecto = controller.obtenerProyectoPorId(item.id);
+        FormatoADetalleDTO formato = controller.obtenerUltimoFormatoA(item.id);
+
+        if (proyecto == null) {
+            JOptionPane.showMessageDialog(this, "No se pudo cargar el proyecto",
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        modalDetalle.cargarProyecto(proyecto, formato);
+
+        modalDetalle.setOnSubmit(() -> {
+            boolean exitoso = controller.handleSubirNuevaVersion(
+                    modalDetalle.getProyectoId(),
+                    modalDetalle.getNuevoFormatoA(),
+                    modalDetalle.getNuevaCarta(),
+                    modalDetalle.getObjetivoGeneral(),        // NUEVO
+                    modalDetalle.getObjetivosEspecificos()    // NUEVO
+            );
+            if (exitoso) modalLayer.cerrar();
+        });
+
+        modalDetalle.setOnCancel(modalLayer::cerrar);
+        modalLayer.showModal(modalDetalle, modalDetalle::reset, new Dimension(900, 700));
+    }
 
     // ===== Menú del docente (☰) =====
     private void mostrarMenu(ActionEvent ev){
@@ -234,35 +268,29 @@ public class DocenteView extends JFrame {
         menu.show(src, 0, src.getHeight());
     }
 
-    // ===== Modal: abrir =====
     private void abrirModalSubir() {
         modalSubir.setOnSubmitValid(() -> {
-            // 1) Tomar archivos
+            ProyectoGradoRequestDTO req = modalSubir.construirDTO();
             java.io.File formatoA = modalSubir.getFormatoA();
-            java.io.File carta    = modalSubir.getCartaEmpresa();
+            java.io.File carta = modalSubir.getCartaEmpresa();
 
-            // 2) Armar DTO mínimo que requiere el controller
-            ProyectoGradoRequestDTO req = new ProyectoGradoRequestDTO();
-            req.titulo    = modalSubir.tfTitulo.getText().trim();
-            req.modalidad = toEnumModalidad(modalSubir.getModalidad()); // mapeo a enum del dominio
-
-            // 3) Llamar AL CONTROLLER (aquí se valida/guarda)
             if (controller != null) {
-                controller.handleCrearProyecto(req, formatoA, carta);
+                boolean exitoso = controller.handleCrearProyecto(req, formatoA, carta);
+
+                if (exitoso) {
+                    modalLayer.cerrar();  // ← Solo cierra si fue exitoso
+                }
+                // Si NO fue exitoso, el modal permanece abierto
             } else {
                 JOptionPane.showMessageDialog(this,
-                        "No hay DocenteController conectado a la vista.\nUsa view.setController(controller).",
-                        "Aviso", JOptionPane.WARNING_MESSAGE);
+                        "Controller no conectado", "Error", JOptionPane.ERROR_MESSAGE);
             }
-
-            modalLayer.cerrar();
         });
 
         modalSubir.setOnCancel(modalLayer::cerrar);
-
-        // Tamaño grande
         modalLayer.showModal(modalSubir, modalSubir::reset, new Dimension(920, 620));
     }
+
 
     // --- mapeo seguro de las 3 modalidades del combo a tu enum del dominio ---
     private static enumModalidad toEnumModalidad(String etiqueta){
@@ -270,7 +298,7 @@ public class DocenteView extends JFrame {
         String s = Normalizer.normalize(etiqueta, Normalizer.Form.NFD)
                               .replaceAll("\\p{M}", "")
                               .toLowerCase().trim();
-        if (s.startsWith("plan"))            //return enumModalidad.PLAN_COTERMINAL;
+        //if (s.startsWith("plan"))            //return enumModalidad.PLAN_COTERMINAL;
         if (s.startsWith("invest"))          return enumModalidad.INVESTIGACION;
         if (s.startsWith("practica"))        return enumModalidad.PRACTICA_PROFESIONAL;
         return null;
@@ -326,8 +354,18 @@ public class DocenteView extends JFrame {
             center.add(grid, BorderLayout.CENTER);
 
             add(center, BorderLayout.CENTER);
+            listPropuestas.setOnProyectoClick(this::onProyectoClick);
         }
-
+        private void onProyectoClick(PropuestaItem item) {
+            // Este método se llamará desde DocenteView
+            if (clickHandler != null) {
+                clickHandler.accept(item);
+            }
+        }
+        private java.util.function.Consumer<PropuestaItem> clickHandler;
+        void setOnProyectoClick(java.util.function.Consumer<PropuestaItem> handler) {
+            this.clickHandler = handler;
+        }
         private JScrollPane scrollFor(JComponent c){
             JScrollPane sp = new JScrollPane(c);
             sp.setBorder(javax.swing.BorderFactory.createEmptyBorder());
@@ -444,10 +482,31 @@ public class DocenteView extends JFrame {
     public static class PropuestaItem {
         public final String titulo;
         public final String fecha;
-        public PropuestaItem(String titulo, String fecha){ this.titulo=titulo; this.fecha=fecha; }
+        public final Integer id;  // NUEVO
+        public final String estado;  // NUEVO
+        public final Integer numeroIntentos;  // NUEVO
+
+        public PropuestaItem(String titulo, String fecha, Integer id, String estado, Integer numeroIntentos) {
+            this.titulo = titulo;
+            this.fecha = fecha;
+            this.id = id;
+            this.estado = estado;
+            this.numeroIntentos = numeroIntentos;
+        }
     }
+
     private static class PropuestasList extends JPanel {
-        PropuestasList(){ setOpaque(false); setLayout(new BorderLayout()); }
+        private java.util.function.Consumer<PropuestaItem> onProyectoClick;
+
+        PropuestasList(){
+            setOpaque(false);
+            setLayout(new BorderLayout());
+        }
+
+        void setOnProyectoClick(java.util.function.Consumer<PropuestaItem> callback) {
+            this.onProyectoClick = callback;
+        }
+
         void setData(List<PropuestaItem> items){
             removeAll();
             JPanel listPanel = new JPanel();
@@ -467,32 +526,104 @@ public class DocenteView extends JFrame {
             add(listPanel, BorderLayout.NORTH);
             revalidate(); repaint();
         }
+
         private JComponent item(PropuestaItem it){
             JLabel icon = new JLabel(new DocIcon(18, C_ROJO_1));
             icon.setPreferredSize(new Dimension(18, 22));
+
             JLabel title = new JLabel(it.titulo);
             title.setFont(F_BODY);
+
             JLabel time = new JLabel(it.fecha, SwingConstants.RIGHT);
             time.setFont(new Font("SansSerif", Font.PLAIN, 12));
             time.setForeground(new Color(90,90,90));
+
+            // NUEVO: Indicador de estado
+            JLabel lblEstado = new JLabel();
+            lblEstado.setFont(new Font("SansSerif", Font.BOLD, 12));
+
+            Color bgColor = Color.WHITE;
+
+            if (it.estado != null) {
+                switch (it.estado) {
+                    case "RECHAZADO":
+                        lblEstado.setText("⚠ Rechazado (" + it.numeroIntentos + "/3)");
+                        lblEstado.setForeground(C_ROJO_1);
+                        bgColor = new Color(255, 245, 245);
+                        break;
+                    case "EN_PROCESO":
+                        lblEstado.setText("⏳ En proceso");
+                        lblEstado.setForeground(new Color(200, 140, 0));
+                        bgColor = new Color(255, 250, 240);
+                        break;
+                    case "APROBADO":
+                        lblEstado.setText("✓ Aprobado");
+                        lblEstado.setForeground(new Color(0, 150, 0));
+                        bgColor = new Color(240, 255, 245);
+                        break;
+                    case "RECHAZADO_DEFINITIVO":
+                        lblEstado.setText("✕ Rechazado definitivo");
+                        lblEstado.setForeground(new Color(120, 0, 0));
+                        bgColor = new Color(250, 235, 235);
+                        break;
+                    default:
+                        lblEstado.setText(it.estado);
+                        lblEstado.setForeground(new Color(90,90,90));
+                }
+            }
+
             JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 6));
             left.setOpaque(false);
-            left.add(icon); left.add(title);
+            left.add(icon);
+            left.add(title);
+
+            JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 6));
+            right.setOpaque(false);
+            right.add(lblEstado);
+            right.add(time);
+
             JPanel line = new JPanel(new BorderLayout());
             line.setOpaque(false);
             line.add(left, BorderLayout.WEST);
-            line.add(time, BorderLayout.EAST);
+            line.add(right, BorderLayout.EAST);
+
             JPanel card = new JPanel(new BorderLayout());
             card.setOpaque(true);
-            card.setBackground(Color.WHITE);
+            card.setBackground(bgColor);
             card.setBorder(javax.swing.BorderFactory.createCompoundBorder(
-                new javax.swing.border.LineBorder(C_BORDE_SUAVE,1,true),
-                new EmptyBorder(6,10,6,10)
+                    new javax.swing.border.LineBorder(C_BORDE_SUAVE,1,true),
+                    new EmptyBorder(6,10,6,10)
             ));
             card.add(line, BorderLayout.CENTER);
             card.setPreferredSize(new Dimension(card.getPreferredSize().width, 50));
             card.setMinimumSize(new Dimension(200, 50));
             card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
+
+            // NUEVO: Hacer clickeable
+            card.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            card.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    if (onProyectoClick != null) {
+                        onProyectoClick.accept(it);
+                    }
+                }
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    card.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+                            new javax.swing.border.LineBorder(C_ROJO_1, 2, true),
+                            new EmptyBorder(5,9,5,9)
+                    ));
+                }
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    card.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+                            new javax.swing.border.LineBorder(C_BORDE_SUAVE, 1, true),
+                            new EmptyBorder(6,10,6,10)
+                    ));
+                }
+            });
+
             return card;
         }
     }
@@ -553,232 +684,6 @@ public class DocenteView extends JFrame {
             g2.dispose();
             super.paintComponent(g);
         }
-    }
-
-    // ======================== MODAL: Nueva Propuesta ========================
-    private static class SubirPropuestaModal extends JPanel {
-        private static final Color C_BORDE_SUAVE = DocenteView.C_BORDE_SUAVE;
-        private static final Color C_ROJO_1      = DocenteView.C_ROJO_1;
-        private static final Color C_ROJO_2      = DocenteView.C_ROJO_2;
-        private static final Font  F_H2          = DocenteView.F_H2;
-        private static final Font  F_H3          = DocenteView.F_H3;
-        private static final Font  F_BODY        = DocenteView.F_BODY;
-
-        // Enum del combo (texto)
-        private enum Modalidad {
-            SELECCION("Seleccione modalidad"),
-            PLAN_COTERMINAL("Plan Coterminal"),
-            INVESTIGACION("Investigación"),
-            PRACTICA("Práctica profesional");
-            final String label;
-            Modalidad(String l){ this.label = l; }
-            @Override public String toString(){ return label; }
-        }
-
-        // Campos
-        final JTextField tfTitulo = text("Ingrese el título del proyecto de grado");
-        final JComboBox<Modalidad> cbModalidad = createModalidadComboBox();
-        final DatePickerField dpFecha = new DatePickerField();
-        final JTextField tfDirId    = text("Número de identificación del director");
-        final JTextField tfCoDirNom = text("Nombre completo del codirector");
-        final JTextArea  taObjGeneral     = area("Describe el objetivo general…");
-        final JTextArea  taObjEspecificos = area("Describe los objetivos específicos…");
-
-        final DropFileField dfFormatoA = new DropFileField();
-        final DropFileField dfCarta    = new DropFileField();
-
-        private Runnable onSubmitValid = () -> {};
-        private Runnable onCancel      = () -> {};
-
-        private static JComboBox<Modalidad> createModalidadComboBox() {
-            javax.swing.DefaultComboBoxModel<Modalidad> model =
-                    new javax.swing.DefaultComboBoxModel<>(Modalidad.values());
-            JComboBox<Modalidad> combo = new JComboBox<>(model);
-            combo.setSelectedItem(Modalidad.SELECCION);
-            combo.setFont(F_BODY);
-            combo.setBackground(Color.WHITE);
-            combo.setBorder(javax.swing.BorderFactory.createCompoundBorder(
-                    new javax.swing.border.LineBorder(C_BORDE_SUAVE, 1, true),
-                    new EmptyBorder(4, 8, 4, 8)
-            ));
-            combo.setLightWeightPopupEnabled(false);   // clave: popup heavyweight
-            combo.setMaximumRowCount(6);
-            return combo;
-        }
-
-        SubirPropuestaModal() {
-            setLayout(new BorderLayout());
-            setOpaque(true);
-            setBackground(Color.WHITE);
-            setBorder(new javax.swing.border.LineBorder(C_BORDE_SUAVE, 1, true));
-
-            JPanel header = new GradientePanel(C_ROJO_1, C_ROJO_2, 16);
-            header.setLayout(new BorderLayout());
-            JLabel title = new JLabel("NUEVA PROPUESTA DE PROYECTO DE GRADO", SwingConstants.CENTER);
-            title.setForeground(Color.WHITE);
-            title.setFont(F_H2.deriveFont(22f));
-            title.setBorder(new EmptyBorder(10,0,10,0));
-            JButton btnX = new JButton("✕");
-            btnX.setForeground(Color.WHITE);
-            btnX.setOpaque(false);
-            btnX.setBorder(javax.swing.BorderFactory.createEmptyBorder(6,10,6,10));
-            btnX.setContentAreaFilled(false);
-            btnX.setFont(F_H3);
-            btnX.addActionListener(e -> onCancel.run());
-            header.add(title, BorderLayout.CENTER);
-            header.add(btnX, BorderLayout.EAST);
-            add(header, BorderLayout.NORTH);
-
-            JPanel form = new JPanel(new GridBagLayout());
-            form.setOpaque(false);
-            form.setBorder(new EmptyBorder(16,18,16,18));
-            GridBagConstraints c = new GridBagConstraints();
-            c.insets = new Insets(8,8,8,8);
-            c.fill = GridBagConstraints.HORIZONTAL;
-            c.weightx = 1.0;
-            int y = 0;
-
-            addFull(form, c, y++, "Título del Proyecto *", tfTitulo);
-            addPair(form, c, y++, "Modalidad *", cbModalidad, "Fecha Actual *", dpFecha);
-            addPair(form, c, y++, "Identificación de director *", tfDirId, "Codirector del proyecto *", tfCoDirNom);
-            addFull(form, c, y++, "Objetivo General *", taScroll(taObjGeneral));
-            addFull(form, c, y++, "Objetivos Específicos *", taScroll(taObjEspecificos));
-
-            addFull(form, c, y++, "Formato A (PDF) *", dfFormatoA);
-            dfFormatoA.setLine1("✎  Arrastre el archivo aquí o haga clic para seleccionar");
-            dfFormatoA.setLine2("Solo un archivo PDF");
-
-            addFull(form, c, y++, "Carta de Aceptación de la empresa (PDF)", dfCarta);
-            dfCarta.setLine1("✎  Arrastre el archivo aquí o haga clic para seleccionar");
-            dfCarta.setLine2("Solo un archivo PDF");
-
-            JScrollPane sc = new JScrollPane(form);
-            sc.setBorder(javax.swing.BorderFactory.createEmptyBorder());
-            sc.getViewport().setBackground(Color.WHITE);
-            add(sc, BorderLayout.CENTER);
-
-            JPanel actions = new JPanel(new FlowLayout(FlowLayout.CENTER, 14, 12));
-            actions.setOpaque(false);
-
-            RoundedButton btnCancelar = RoundedButton.neutral("Cancelar");
-            btnCancelar.putClientProperty("role", "cancel");
-            btnCancelar.addActionListener(e -> onCancel.run());
-
-            RoundedButton btnEnviar = RoundedButton.primary("Enviar Propuesta");
-            btnEnviar.addActionListener(e -> { if (validar()) onSubmitValid.run(); });
-
-            actions.add(btnCancelar);
-            actions.add(btnEnviar);
-            add(actions, BorderLayout.SOUTH);
-
-            actualizarCarta();
-            cbModalidad.addActionListener(e -> actualizarCarta());
-        }
-
-        private boolean validar(){
-            StringBuilder sb = new StringBuilder();
-            if (isEmpty(tfTitulo.getText()))          sb.append("• Título del proyecto es obligatorio.\n");
-            Modalidad m = (Modalidad) cbModalidad.getSelectedItem();
-            if (m == null || m == Modalidad.SELECCION) sb.append("• Selecciona una modalidad.\n");
-            if (isEmpty(dpFecha.getDateString()))     sb.append("• Fecha actual es obligatoria.\n");
-            if (isEmpty(tfDirId.getText()))           sb.append("• Identificación de director es obligatoria.\n");
-            if (isEmpty(tfCoDirNom.getText()))        sb.append("• Codirector del proyecto es obligatorio.\n");
-            if (isEmpty(taObjGeneral.getText()))      sb.append("• Objetivo General es obligatorio.\n");
-            if (isEmpty(taObjEspecificos.getText()))  sb.append("• Objetivos Específicos son obligatorios.\n");
-            if (!dfFormatoA.hasFile())                sb.append("• Debes adjuntar el Formato A (PDF).\n");
-            if (m == Modalidad.PRACTICA && !dfCarta.hasFile())
-                sb.append("• Debes adjuntar la Carta de Aceptación (PDF) para Práctica profesional.\n");
-
-            if (sb.length()>0){
-                JOptionPane.showMessageDialog(this, sb.toString(), "Campos obligatorios", JOptionPane.WARNING_MESSAGE);
-                return false;
-            }
-            return true;
-        }
-        private static boolean isEmpty(String s){ return s==null || s.trim().isEmpty(); }
-
-        private static JTextField text(String placeholder){
-            JTextField tf = new JTextField();
-            tf.putClientProperty("JTextField.placeholderText", placeholder);
-            tf.setFont(F_BODY);
-            tf.setBorder(javax.swing.BorderFactory.createCompoundBorder(
-                    new javax.swing.border.LineBorder(C_BORDE_SUAVE,1,true),
-                    new EmptyBorder(8,10,8,10)));
-            return tf;
-        }
-        private static JTextArea area(String ph){
-            JTextArea ta = new JTextArea(3, 20);
-            ta.setLineWrap(true);
-            ta.setWrapStyleWord(true);
-            ta.setFont(F_BODY);
-            ta.setBorder(new EmptyBorder(6,6,6,6));
-            ta.putClientProperty("JTextArea.placeholderText", ph);
-            return ta;
-        }
-        private static JScrollPane taScroll(JTextArea ta){
-            JScrollPane sp = new JScrollPane(ta);
-            sp.setBorder(javax.swing.BorderFactory.createCompoundBorder(
-                    new javax.swing.border.LineBorder(C_BORDE_SUAVE,1,true),
-                    new EmptyBorder(4,6,4,6)));
-            sp.getViewport().setBackground(Color.WHITE);
-            return sp;
-        }
-        private static void label(JPanel form, GridBagConstraints c, int x, int y, String text){
-            GridBagConstraints l = (GridBagConstraints) c.clone();
-            l.gridx = x; l.gridy = y; l.weightx = 0.0;
-            JLabel jl = new JLabel(text);
-            jl.setFont(F_H3);
-            form.add(jl, l);
-        }
-        private static void field(JPanel form, GridBagConstraints c, int x, int y, Component comp){
-            GridBagConstraints f = (GridBagConstraints) c.clone();
-            f.gridx = x; f.gridy = y; f.weightx = 1.0;
-            form.add(comp, f);
-        }
-        private static void addPair(JPanel form, GridBagConstraints c, int y,
-                                    String l1, Component f1, String l2, Component f2){
-            label(form,c,0,y,l1); field(form,c,1,y,f1);
-            label(form,c,2,y,l2); field(form,c,3,y,f2);
-        }
-        private static void addFull(JPanel form, GridBagConstraints c, int y, String l, Component comp){
-            label(form,c,0,y,l);
-            GridBagConstraints f = (GridBagConstraints) c.clone();
-            f.gridx=1; f.gridy=y; f.gridwidth=3; f.weightx=1.0;
-            form.add(comp, f);
-        }
-
-        private void actualizarCarta(){
-            Modalidad m = (Modalidad) cbModalidad.getSelectedItem();
-            boolean req = (m == Modalidad.PRACTICA);
-            dfCarta.setEnabled(req);
-            if (req) {
-                dfCarta.setLine1("✎  Arrastre el archivo aquí o haga clic para seleccionar (REQUERIDO)");
-                dfCarta.setLine2("Solo un archivo PDF - Obligatorio para Práctica profesional");
-            } else {
-                dfCarta.setLine1("✎  Arrastre el archivo aquí o haga clic para seleccionar");
-                dfCarta.setLine2("Solo un archivo PDF - Opcional para esta modalidad");
-            }
-            revalidate(); repaint();
-        }
-
-        void setOnSubmitValid(Runnable r){ this.onSubmitValid = (r!=null)? r : () -> {}; }
-        void setOnCancel(Runnable r){ this.onCancel = (r!=null)? r : () -> {}; }
-
-        void reset(){
-            tfTitulo.setText(""); cbModalidad.setSelectedItem(Modalidad.SELECCION); dpFecha.clear();
-            tfDirId.setText(""); tfCoDirNom.setText("");
-            taObjGeneral.setText(""); taObjEspecificos.setText("");
-            dfFormatoA.clear(); dfCarta.clear();
-            actualizarCarta();
-        }
-
-        java.io.File getFormatoA(){ return dfFormatoA.getFile(); }
-        java.io.File getCartaEmpresa(){ return dfCarta.getFile(); }
-        String getModalidad(){ 
-            Modalidad m = (Modalidad) cbModalidad.getSelectedItem();
-            return m == null ? "" : m.label;
-        }
-        String getFecha(){ return dpFecha.getDateString(); }
     }
 
     // ========================= Capa Modal (GlassPane) =========================

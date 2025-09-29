@@ -44,6 +44,7 @@ public class DashboardNavigator implements IDashBoardController {
             DocenteController controller = new DocenteController(proyectoService, user);
             controller.setNavigator(this);
             controller.setDocenteView(view);
+            view.setController(controller);
             controller.inicializarVista();
 
             // Hooks de la vista
