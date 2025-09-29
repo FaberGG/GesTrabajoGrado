@@ -10,6 +10,7 @@ public interface IProyectoGradoService {
     FormatoA subirNuevaVersion(Integer proyectoId, File archivo);
     FormatoA subirNuevaVersion(Integer proyectoId, File archivo,File cartaAceptacion, String objetivoGeneral, String objetivosEspecificos);
     boolean validarModalidadPracticaProfesional(File archivo);
+    ProyectoGradoResponseDTO obtenerProyectoPorEstudiante(Integer estudianteId);
     List<ProyectoGradoResponseDTO> obtenerProyectosPorDocente(Integer docenteId);
     void rechazarFormatoA(Integer formatoId, String observaciones, Integer evaluadorId);
     void aprobarFormatoA(Integer formatoId, String observaciones, Integer evaluadorId);
