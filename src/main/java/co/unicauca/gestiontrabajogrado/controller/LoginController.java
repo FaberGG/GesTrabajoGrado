@@ -20,6 +20,8 @@ public class LoginController {
 
     private final IAutenticacionService autenticacionService;
     private LoginView loginView;
+    private IDashBoardController navigator;
+    public void setNavigator(IDashBoardController navigator) { this.navigator = navigator; }
 
     public LoginController(IAutenticacionService autenticacionService, LoginView loginView) {
         this.autenticacionService = autenticacionService;
@@ -84,8 +86,7 @@ public class LoginController {
     public void handleRegistrarse() {
         SwingUtilities.invokeLater(() -> {
             try {
-                // Cerrar la ventana de login
-                loginView.dispose();
+                if (loginView != null) loginView.dispose();
 
                 // Crear la vista de registro
                 RegisterView registerView = new RegisterView();
@@ -168,10 +169,21 @@ public class LoginController {
     private void redirectToDashboard(User user) {
         SwingUtilities.invokeLater(() -> {
             try {
-                // Cerrar la ventana de login
-                loginView.dispose();
+                if (loginView != null) loginView.dispose();
 
-                // Abrir dashboard según el rol del usuario
+                if (navigator != null) {
+                    switch (user.getRol()) {
+                        case DOCENTE:    navigator.openDocente(user);    break;
+                        case ESTUDIANTE: navigator.openEstudiante(user); break;
+                        case ADMIN:      navigator.openAdmin(user);      break;
+                        default:
+                            showError("Tipo de usuario no reconocido: " + user.getRol());
+                            handleVolverDesdeRegistro();
+                    }
+                    return;
+                }
+
+                // Fallback si aún no configuraste el navegador (para no romper flujo)
                 switch (user.getRol()) {
                     case DOCENTE:
                         new DocenteView(user).setVisible(true);

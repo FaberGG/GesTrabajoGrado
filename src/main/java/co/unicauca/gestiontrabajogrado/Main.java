@@ -1,34 +1,42 @@
 package co.unicauca.gestiontrabajogrado;
 
-import co.unicauca.gestiontrabajogrado.infrastructure.repository.UserRepository;
-import co.unicauca.gestiontrabajogrado.presentation.auth.LoginView;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.JOptionPane;
+
+import co.unicauca.gestiontrabajogrado.controller.DashboardNavigator;
+import co.unicauca.gestiontrabajogrado.controller.IDashBoardController;
 import co.unicauca.gestiontrabajogrado.controller.LoginController;
-import co.unicauca.gestiontrabajogrado.domain.service.AutenticacionService;
-import co.unicauca.gestiontrabajogrado.domain.service.IAutenticacionService;
-import co.unicauca.gestiontrabajogrado.infrastructure.repository.IUserRepository;
-import co.unicauca.gestiontrabajogrado.presentation.common.ServiceManager; // NUEVO: Importar ServiceManager
-import co.unicauca.gestiontrabajogrado.util.PasswordHasher;
-import co.unicauca.gestiontrabajogrado.util.EmailPolicy;
-import co.unicauca.gestiontrabajogrado.util.PasswordPolicy;
-import co.unicauca.gestiontrabajogrado.util.IEmailPolicy;
-import co.unicauca.gestiontrabajogrado.util.IPasswordPolicy;
+
+import co.unicauca.gestiontrabajogrado.domain.service.*;
+import co.unicauca.gestiontrabajogrado.presentation.auth.LoginView;
+import co.unicauca.gestiontrabajogrado.presentation.common.ServiceManager;
+
 import co.unicauca.gestiontrabajogrado.infrastructure.database.DatabaseInitializer;
 
-import javax.swing.*;
+import co.unicauca.gestiontrabajogrado.infrastructure.repository.IUserRepository;
+import co.unicauca.gestiontrabajogrado.infrastructure.repository.UserRepository;
 
-/**
- * Clase principal de la aplicación
- * Configura la inyección de dependencias y inicia la aplicación
- *
- * @author Lyz
- */
+// >>> Repositorios para proyectos / formato A
+import co.unicauca.gestiontrabajogrado.infrastructure.repository.IProyectoGradoRepository;
+import co.unicauca.gestiontrabajogrado.infrastructure.repository.IFormatoARepository;
+import co.unicauca.gestiontrabajogrado.infrastructure.repository.ProyectoGradoRepository;
+import co.unicauca.gestiontrabajogrado.infrastructure.repository.FormatoARepository;
+
+// >>> Servicios de dominio
+
+// Utils
+import co.unicauca.gestiontrabajogrado.util.EmailPolicy;
+import co.unicauca.gestiontrabajogrado.util.IEmailPolicy;
+import co.unicauca.gestiontrabajogrado.util.PasswordPolicy;
+import co.unicauca.gestiontrabajogrado.util.IPasswordPolicy;
+import co.unicauca.gestiontrabajogrado.util.PasswordHasher;
+
 public class Main {
 
     public static void main(String[] args) {
-        // Configurar Look and Feel del sistema
         configureLookAndFeel();
 
-        // Inicializar la aplicación en el Event Dispatch Thread
         SwingUtilities.invokeLater(() -> {
             try {
                 initializeApplication();
@@ -38,89 +46,69 @@ public class Main {
         });
     }
 
-    /**
-     * Configura el aspecto visual de la aplicación
-     */
     private static void configureLookAndFeel() {
         try {
-            // Usar el Look and Feel del sistema operativo para mejor integración
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-
-            // Configuraciones adicionales de UI si es necesario
             System.setProperty("awt.useSystemAAFontSettings", "on");
             System.setProperty("swing.aatext", "true");
-
         } catch (Exception e) {
-            System.err.println("Warning: No se pudo configurar el Look and Feel del sistema: " + e.getMessage());
-            // Continuar con el Look and Feel por defecto
+            System.err.println("Warning: Look&Feel no aplicado: " + e.getMessage());
         }
     }
 
-    /**
-     * Inicializa la aplicación configurando las dependencias
-     */
     private static void initializeApplication() {
-        // 1. Inicializar la base de datos
+        // 1) DB
         DatabaseInitializer.ensureCreated();
-        // 2. Crear las dependencias necesarias
+
+        // 2) Autenticación (lo que ya tenías)
         IUserRepository userRepository = createUserRepository();
         PasswordHasher passwordHasher = new PasswordHasher();
         IEmailPolicy emailPolicy = EmailPolicy.getInstance();
         IPasswordPolicy passwordPolicy = PasswordPolicy.getInstance();
         IAutenticacionService autenticacionService = new AutenticacionService(
-            userRepository, passwordHasher, emailPolicy, passwordPolicy
+                userRepository, passwordHasher, emailPolicy, passwordPolicy
         );
+        IUserService userService = new UserService(userRepository);
 
-        // 2. NUEVO: Configurar ServiceManager con la instancia del servicio
-        // Esto permite que otras partes de la aplicación (como cerrar sesión) accedan al servicio
+        // Exponerlo si lo usas globalmente
         ServiceManager.getInstance().setAutenticacionService(autenticacionService);
 
-        // 3. Crear la vista de login
+        // 3) *** NUEVO *** Dependencias para proyectos (constructor requiere 3)
+        IProyectoGradoRepository proyectoRepo = new ProyectoGradoRepository();
+        IFormatoARepository formatoARepo     = new FormatoARepository();
+        IArchivoService archivoService       = new ArchivoService();
+
+
+        IProyectoGradoService proyectoService =
+                new ProyectoGradoService(proyectoRepo, formatoARepo, archivoService, userRepository);
+
+        // 4) *** NUEVO *** Navigator que usará el LoginController para redirigir
+        IDashBoardController navigator = new DashboardNavigator(autenticacionService, proyectoService, userService);
+
+        // 5) Login (igual que antes) pero inyectando navigator
         LoginView loginView = new LoginView();
-
-        // 4. Crear el controller con las dependencias
         LoginController loginController = new LoginController(autenticacionService, loginView);
-
-        // 5. Conectar la vista con el controller
+        loginController.setNavigator(navigator);   // <<< IMPORTANTE
         loginView.setController(loginController);
-
-        // 6. Mostrar la ventana de login
         loginView.setVisible(true);
 
         System.out.println("Aplicación iniciada correctamente");
-        System.out.println("ServiceManager configurado con AutenticacionService");
     }
 
-    /**
-     * Crea el repositorio de usuarios
-     * NOTA: Necesitas implementar tu repositorio concreto
-     */
     private static IUserRepository createUserRepository() {
-        // Opción 1: Si tienes una implementación de base de datos
-        // return new UserRepositoryImpl();
-
-        // Opción 2: Implementación temporal en memoria para desarrollo
-        return new UserRepository();
+        return new UserRepository(); // tu implementación en memoria / BD
     }
 
-    /**
-     * Maneja errores durante el inicio de la aplicación
-     */
     private static void handleStartupError(Exception e) {
-        String errorMessage = "Error al iniciar la aplicación: " + e.getMessage();
-        System.err.println(errorMessage);
+        String msg = "Error al iniciar la aplicación: " + e.getMessage();
+        System.err.println(msg);
         e.printStackTrace();
-
-        // Mostrar mensaje de error al usuario
         JOptionPane.showMessageDialog(
                 null,
-                "No se pudo iniciar la aplicación.\n" +
-                        "Error: " + e.getMessage() + "\n\n" +
-                        "Por favor, contacta al administrador del sistema.",
+                "No se pudo iniciar la aplicación.\nError: " + e.getMessage(),
                 "Error de Inicio",
                 JOptionPane.ERROR_MESSAGE
         );
-
         System.exit(1);
     }
 }
