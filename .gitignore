@@ -1,10 +1,68 @@
-### IntelliJ IDEA ###
-out/
-!**/src/main/**/out/
-!**/src/test/**/out/
+### Java ###
+# Archivos compilados
+*.class
 
-### Kotlin ###
-.kotlin
+# Archivos de paquetes
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Registros de errores de la máquina virtual
+hs_err_pid*
+replay_pid*
+
+### Maven ###
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+### Spring Boot ###
+**/target/
+**/out/
+**/.mvn/
+
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+.idea_modules/
+out/
+atlassian-ide-plugin.xml
+
+### VS Code ###
+.vscode/
+**/.settings/
+**/.classpath
+**/.factorypath
+**/.project
+
+### GitHub Copilot ###
+.github/.copilot/
+.github/copilot/
+.github/copilot-user/
+.copilot*
+copilot-rest.log
+.vscode-copilot/
+.copilot-cache/
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
 
 ### Eclipse ###
 .apt_generated
@@ -14,19 +72,35 @@ out/
 .settings
 .springBeans
 .sts4-cache
-bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-
-### VS Code ###
-.vscode/
-
-### Mac OS ###
+### OS Files ###
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+### Logs ###
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+### Environment files ###
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+### Docker ###
+.docker/
+
+### Node.js (por si se usa algún frontend) ###
+node_modules/
+npm-debug.log
+yarn-error.log
+.pnp.*
