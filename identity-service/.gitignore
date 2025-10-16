@@ -1,0 +1,51 @@
+# Dependencias
+node_modules/
+npm-debug.log
+yarn-error.log
+yarn-debug.log
+package-lock.json
+
+# Archivos de entorno
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Logs
+logs/
+*.log
+
+# Directorios de build
+dist/
+build/
+.output/
+.nuxt/
+
+# Coverage de pruebas
+coverage/
+.nyc_output/
+
+# Editores/IDEs
+.idea/
+.vscode/
+*.sublime-*
+*.swp
+*.swo
+.DS_Store
+
+# Temporales
+.tmp/
+tmp/
+temp/
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Docker
+.docker/
+docker-compose.override.yml
+
+# Directorios locales
+.cache/
